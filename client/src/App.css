@@ -1,8 +1,6 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  min-height: 100vh;
 }
 
 .logo {
@@ -39,4 +37,55 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.add-cook-container {
+  position: fixed;
+  top: 120px; 
+  right: 40px;
+  z-index: 999;
+}
+
+.add-cook-btn {
+  background-color: var(--forest-green);
+  color: white;
+  border: none;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  position: relative;
+  transition: transform 0.4s;
+}
+
+
+.add-cook-btn:hover {
+  transform: scale(1.1);
+}
+
+.add-cook-tooltip {
+  position: absolute;
+  right: 60px; /* Pushes it to the left of the button */
+  background: #333;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.add-cook-btn:hover .add-cook-tooltip {
+  opacity: 1;
+}
+
+.add-cook-btn svg {
+  /* This ensures the icon itself is treated as a flexible element */
+  display: block; 
 }

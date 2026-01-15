@@ -1,0 +1,105 @@
+.navbar {
+  height: 60px;
+  width: 100%;
+  background-color: var(--forest-green);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 36px;
+  box-shadow: var(--shadow-soft);
+  /* making navbar sticky */
+  position: sticky;
+  top: 0;
+  /*Putting at top of stack so images don't pop through*/
+  z-index: 1000000;
+}
+
+
+/* Navigation Links */
+.navbar-links {
+  list-style: none;
+  display: flex;
+  gap: 32px;
+  position: center;
+}
+
+.navbar-links a {
+  color: var(--cream);
+  text-decoration: none;
+  font-weight: 500;
+  padding-bottom: 4px;
+  align-items: center;
+  transition: color 0.2s ease, border-bottom 0.2s ease;
+}
+
+.navbar-links a:hover {
+  color: var(--sage-green);
+}
+
+.navbar-links a.active {
+  color: var(--white);
+  border-bottom: 2px solid var(--sage-green);
+}
+
+/* Search */
+.search-container {
+  position: relative;
+}
+
+.search-input {
+  width: 0;
+  opacity: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: none;
+  outline: none;
+  transition: width 0.3s ease, opacity 0.3s ease;
+}
+
+.search-container:hover .search-input {
+  width: 240px;
+  opacity: 1;
+}
+
+.search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--olive-green);
+}
+
+/* logo */
+
+.logo {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--white);
+  text-decoration: none;
+  transform: translateY(4px);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-img {
+  height: 45px;
+  width: auto;
+  display: inline-flex;
+  transform: translateY(12px);
+}
+
+.logo-text {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--white);
+}
+
+/* push search away from contact us */
+.navbar-right {
+  margin-left: 140px;   /* 👈 pushes search away from Contact Us */
+}

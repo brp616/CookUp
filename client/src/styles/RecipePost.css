@@ -1,0 +1,382 @@
+.recipe-card {
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  max-width: 550px;
+  margin: 20px auto;
+  overflow: hidden;
+  border: 1px solid #eee;
+}
+
+.card-header {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--sage-green);
+}
+
+.username {
+  display: block;
+  font-weight: 700;
+  color: var(--forest-green);
+}
+
+.timestamp {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.card-content {
+  padding: 0 16px 12px;
+}
+
+.recipe-title {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+}
+
+.image-scroller {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory; /* This creates the "swipe" feel */
+  scrollbar-width: none; /* Hide scrollbar for clean look */
+}
+
+.image-scroller::-webkit-scrollbar { display: none; }
+
+.image-slide {
+  flex: 0 0 100%; /* Each slide takes full width */
+  scroll-snap-align: center;
+  position: relative;
+}
+
+.image-counter {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.preview-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.preview-row img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.image-container {
+  position: relative; /* All absolute children (tags/stars) will pin to THIS */
+  width: 100%;
+  overflow: visible; /* Let tooltips/tags breathe */
+}
+
+.image-scroller {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  border-radius: 8px; /* Round the whole container */
+}
+
+.image-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+}
+
+.dish-img {
+  width: 100%;
+  aspect-ratio: 4 / 3; /* Keeps the card size consistent regardless of image shape */
+  object-fit: cover;
+  display: block;
+}
+
+/* Ensure overlays have high Z-index to sit ON TOP of images */
+.tags-overlay, .stats-overlay {
+  z-index: 10;
+  pointer-events: none; /* Allows user to still swipe "through" the labels */
+}
+
+.tags-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+
+.stats-overlay {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+}
+
+/* The Strava-style stats bar */
+.stats-overlay {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.stat {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--forest-green);
+}
+
+.card-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 20px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #555;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.action-btn:hover {
+  color: var(--forest-green);
+}
+
+.action-btn.kudos:hover {
+  color: #e74c3c;
+}
+
+.yum-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+/* The Speech Bubble (Tooltip) */
+.yum-tooltip {
+  position: absolute;
+  bottom: 150%; /* Position it above the icon */
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background-color: var(--deep-walnut);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s ease-in-out;
+  z-index: 1000;
+}
+
+/* The Little Triangle pointer at the bottom of the bubble */
+.yum-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: var(--deep-walnut) transparent transparent transparent;
+}
+
+/* Hover Effect: Show bubble and move it up */
+.yum-container:hover .yum-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Color change for the icon on hover */
+.yum-container:hover .yum-icon {
+  color: var(--forest-green);
+}
+
+/* Color change for the text on hover */
+.yum-container:hover .yum-count {
+  color: var(--forest-green);
+}
+
+.yum-container.active .yum-icon {
+  color: var(--forest-green); /* Stays green after clicking */
+  fill: var(--forest-green);   /* Optional: fills the bowl icon if using a compatible set */
+}
+
+.yum-container.active span {
+  color: var(--forest-green); /* The number also turns green */
+  font-weight: 800;
+}
+
+
+
+.yum-container.yum-count {
+    z-index: 1000;
+}
+
+/* The Animation Definition */
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+/* Apply animation only when the 'active' class is added */
+.yum-container.active .yum-icon {
+  animation: pop 0.3s ease-out;
+}
+
+.yum-container:hover .yum-tooltip {
+  opacity: 1;
+  transition-delay: 0.1s; /* Slight delay feels more premium */
+}
+
+/* Tags Overlay (Top Left) */
+.tags-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 80%;
+}
+
+.tag-pill {
+  background: rgba(45, 52, 54, 0.8); /* Darker semi-transparent background */
+  backdrop-filter: blur(4px);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.5px;
+}
+
+/* Specific Stat Style for Rating */
+.stat.rating {
+  display: flex;
+  gap: 2px;
+  padding: 5px 8px;
+}
+
+/* Make sure stats bar doesn't cover too much */
+.stats-overlay {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Ensure the image doesn't cut off tags */
+.dish-img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px; /* Optional: gives the image itself a slight round inside the card */
+}
+.source-metadata {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: #636e72; /* Subtle grey */
+  flex-wrap: wrap; /* Wraps cleanly on mobile */
+}
+
+.recipe-source-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--forest-green);
+  text-decoration: none;
+  font-weight: 700;
+  transition: color 0.2s;
+}
+
+.recipe-source-link:hover {
+  color: var(--sage-green);
+}
+
+.source-divider {
+  color: #dfe6e9; /* Very light pipe divider */
+  font-weight: 300;
+}
+
+.source-site {
+  font-weight: 600;
+  color: #2d3436;
+  letter-spacing: 0.5px;
+  font-size: 0.75rem;
+}
+
+.source-recipe-name {
+    font-weight: 600;
+  color: #2d3436;
+  letter-spacing: 0.5px;
+  font-size: 0.75rem;
+}

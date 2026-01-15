@@ -1,0 +1,26 @@
+/* add font */
+@import url('https://fonts.googleapis.com/css?family=Rethink+Sans:wght@400;500;600;700&display=swap');
+/* CSS Variables */
+
+:root {
+ /* Colors! */
+    /*  Brand Colors (CookUp) */
+  --forest-green: #4F8F6A;
+  --olive-green:  #3F6F56;
+  --sage-green:   #7FB59B;
+  --deep-walnut: #3D3028;
+
+  /*  Neutrals */
+  --cream:        #F5F3EE;
+  --white:        #FFFFFF;
+  --charcoal:     #2F2F2F;
+
+  /* typography is my passion*/
+    --font-primary: 'Rethink Sans', system-ui, -apple-system, sans-serif;
+
+
+  /* UI helpers */
+  --shadow-soft:  0 4px 10px rgba(0, 0, 0, 0.08);
+  --radius-lg:    16px;
+  --radius-md:    10px;
+}

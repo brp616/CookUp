@@ -1,0 +1,15 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-primary);
+  background-color: var(--cream);
+  color: var(--charcoal);
+}
+
+main {
+  width: 100%;
+  padding: 24px 36px;
+}
