@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+import postRoutes from "./routes/postRoutes.js"; // Import the router
 
 dotenv.config();
 
@@ -9,18 +10,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// --- LINK ROUTES ---
+// This says: "All routes starting with /api/posts should use postRoutes"
+app.use("/api/posts", postRoutes);
+
+// --- DATABASE & SERVER START ---
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch(err => console.error(err));
-
-app.get("/", (req, res) => {
-  res.send("CookUp API running");
-});
-
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
-});
-
-//tell me what this code means: This code sets up a basic Express.js server that connects to a MongoDB database using Mongoose. It includes the following key components:
-//1. Imports necessary modules: express for server creation, mongoose for MongoDB interaction, cors for handling cross-origin requests, and dotenv for environment variable management.
-//2. Configures environment variables using dotenv.
+  .then(() => {
+    console.log("🚀 Connected to MongoDB");
+    app.listen(5000, () => console.log("📡 Server running on port 5000"));
+  })
+  .catch(err => console.error("Connection error:", err));

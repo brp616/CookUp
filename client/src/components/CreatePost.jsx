@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import { LuX, LuUpload, LuLink, LuLoader, LuClock, LuFlame, LuStar, LuTag } from "react-icons/lu";
 import "../styles/createPost.css";
 
+// Replace these with your actual Cloudinary credentials
+const CLOUD_NAME = "ddhhjsobx"; 
+const UPLOAD_PRESET = "Cookup_uploads";
+
 export default function CreatePost({ isOpen, onClose }) {
   // Form States
   const [images, setImages] = useState([]);
@@ -26,12 +30,77 @@ export default function CreatePost({ isOpen, onClose }) {
     );
   };
 
+  // --- CLOUDINARY LOGIC ---
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (images.length + files.length > 3) return alert("Max 3 images!");
+    
     setIsUploading(true);
-    // ... (Cloudinary logic from previous step goes here)
-    setIsUploading(false);
+
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", UPLOAD_PRESET);
+
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+          { method: "POST", body: formData }
+        );
+
+        if (!response.ok) throw new Error("Upload failed");
+        const data = await response.json();
+        return data.secure_url;
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      // This correctly uses setImages to update the state
+      setImages((prev) => [...prev, ...uploadedUrls]);
+
+    } catch (error) {
+      console.error("Cloudinary Error:", error);
+      alert("Error uploading images. Check Cloudinary config.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // --- MONGODB SUBMISSION LOGIC ---
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Construct the data object to match your MongoDB Schema
+    const newCook = {
+      recipeName,
+      description,
+      sourceUrl,
+      dishImages: images, // The array of URLs from Cloudinary
+      cookTime: Number(cookTime),
+      difficulty,
+      rating,
+      tags: selectedTags,
+      // Optional: username: "Current Logged In User"
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/api/posts", { // Update to your API URL
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newCook),
+      });
+
+      if (response.ok) {
+        alert("Cook Shared Successfully!");
+        onClose(); // Close modal
+        window.location.reload(); // Refresh to see new post
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+      }
+    } catch (err) {
+      console.error("Server Error:", err);
+      alert("Could not connect to the server.");
+    }
   };
 
   if (!isOpen) return null;
@@ -44,19 +113,30 @@ export default function CreatePost({ isOpen, onClose }) {
           <button className="close-x" onClick={onClose}><LuX /></button>
         </div>
 
-        <form className="modal-form scrollable-form">
-          {/* URL & Name */}
+        {/* Added onSubmit handler here */}
+        <form className="modal-form scrollable-form" onSubmit={handleSubmit}>
+          
           <div className="input-group">
             <label><LuLink size={14} /> Recipe Link</label>
-            <input type="text" placeholder="Link to original recipe..." value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} />
+            <input 
+               type="text" 
+               placeholder="Link to original recipe..." 
+               value={sourceUrl} 
+               onChange={(e) => setSourceUrl(e.target.value)} 
+            />
           </div>
 
           <div className="input-group">
             <label>Cook Name</label>
-            <input type="text" placeholder="e.g., Spicy Miso Ramen" value={recipeName} onChange={(e) => setRecipeName(e.target.value)} required />
+            <input 
+              type="text" 
+              placeholder="e.g., Spicy Miso Ramen" 
+              value={recipeName} 
+              onChange={(e) => setRecipeName(e.target.value)} 
+              required 
+            />
           </div>
 
-          {/* Stats Row: Time & Difficulty */}
           <div className="form-row">
             <div className="input-group">
               <label><LuClock size={14} /> Time (mins)</label>
@@ -72,7 +152,6 @@ export default function CreatePost({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Star Rating */}
           <div className="input-group">
             <label>Taste Rating</label>
             <div className="star-rating-input">
@@ -84,18 +163,21 @@ export default function CreatePost({ isOpen, onClose }) {
                   fill={num <= rating ? "#f1c40f" : "none"}
                   stroke={num <= rating ? "#f1c40f" : "#ccc"}
                   className="star-icon"
+                  style={{ cursor: 'pointer' }}
                 />
               ))}
             </div>
           </div>
 
-          {/* Description */}
           <div className="input-group">
             <label>Description</label>
-            <textarea placeholder="How was the process?" value={description} onChange={(e) => setDescription(e.target.value)} />
+            <textarea 
+              placeholder="How was the process?" 
+              value={description} 
+              onChange={(e) => setDescription(e.target.value)} 
+            />
           </div>
 
-          {/* Nested Tags Section */}
           <div className="input-group">
             <label><LuTag size={14} /> Tags</label>
             <div className="tags-container">
@@ -119,7 +201,6 @@ export default function CreatePost({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Images */}
           <div className="image-upload-zone">
             <input type="file" multiple onChange={handleImageUpload} id="file-input" hidden />
             <label htmlFor="file-input" className="upload-btn">
@@ -127,11 +208,25 @@ export default function CreatePost({ isOpen, onClose }) {
               Upload Photos ({images.length}/3)
             </label>
             <div className="preview-row">
-              {images.map((url, i) => <img key={i} src={url} className="thumb-preview" alt="preview" />)}
+              {images.map((url, i) => (
+                <div key={i} className="thumb-wrapper">
+                  <img src={url} className="thumb-preview" alt="preview" />
+                  {/* Small X to remove images if needed */}
+                  <button 
+                    type="button" 
+                    className="remove-img" 
+                    onClick={() => setImages(images.filter((_, index) => index !== i))}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
 
-          <button type="submit" className="share-btn">Share Cook</button>
+          <button type="submit" className="share-btn" disabled={isUploading}>
+            {isUploading ? "Uploading..." : "Share Cook"}
+          </button>
         </form>
       </div>
     </div>

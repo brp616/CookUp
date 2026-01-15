@@ -1,11 +1,54 @@
-import React, { useState } from "react";
-import { LuHeart, LuMessageCircle, LuShare2, LuClock, LuFlame, LuStar, LuExternalLink } from "react-icons/lu";
+import React, { useState, useRef } from "react";
+import { LuHeart, LuMessageCircle, LuShare2, LuClock, LuFlame, LuStar, LuExternalLink, LuChevronLeft, LuChevronRight, LuTrash2, LuSend } from "react-icons/lu";
 import { FaBowlFood } from "react-icons/fa6";
 import "../styles/RecipePost.css";
 
 
 
 export default function RecipePost({ post }) {
+    
+    const [comments, setComments] = useState(post.comments || []);
+const [commentText, setCommentText] = useState("");
+const [showAll, setShowAll] = useState(false);
+    
+// --- DELETE LOGIC ---
+const handleDelete = async () => {
+  if (window.confirm("Are you sure you want to delete this cook?")) {
+    try {
+      const res = await fetch(`http://localhost:5000/api/posts/${post._id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) window.location.reload(); // Refresh feed to remove post
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
+  }
+};
+
+// --- COMMENT LOGIC ---
+const handleCommentSubmit = async (e) => {
+  e.preventDefault();
+  if (!commentText.trim()) return;
+
+  try {
+    const res = await fetch(`http://localhost:5000/api/posts/${post._id}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: commentText, username: "ChefUser" }),
+    });
+
+    const updatedPost = await res.json();
+    
+    // FIX: Make sure you are setting the state to the NEW comments array
+    if (updatedPost && updatedPost.comments) {
+      setComments(updatedPost.comments); 
+      setCommentText(""); // Clear the input
+    }
+  } catch (err) {
+    console.error("Error:", err);
+  }
+};
+
     //get recipe name
 const getDomainName = (url) => {
   // If url is null, undefined, or an empty string, don't even try to parse it
@@ -18,7 +61,33 @@ const getDomainName = (url) => {
     return "Recipe Source";
   }
 };
+// [NEW] State and Ref for Carousel tracking
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollRef = useRef(null);
 
+  // [NEW] Logic to update index during manual swipe
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const width = scrollRef.current.offsetWidth;
+      const newIndex = Math.round(scrollRef.current.scrollLeft / width);
+      setCurrentIndex(newIndex);
+    }
+  };
+
+  // [NEW] Logic for Arrow Buttons
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const width = scrollRef.current.offsetWidth;
+      const scrollAmount = direction === "left" 
+        ? scrollRef.current.scrollLeft - width 
+        : scrollRef.current.scrollLeft + width;
+      
+      scrollRef.current.scrollTo({
+        left: scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
     // Helper to render stars based on rating (e.g., 4)
   const renderStars = (rating) => {
     return [...Array(5)].map((_, i) => (
@@ -33,20 +102,34 @@ const getDomainName = (url) => {
     const [yummed, setYummed] = useState(false);
   const [count, setCount] = useState(post.kudosCount);
 
-  const handleYum = () => {
-    // Toggle state
-    setYummed(!yummed);
-    setCount(yummed ? count - 1 : count + 1);
+ const handleYum = async () => {
+  try {
+    // 1. Tell the server to increment the count in DB
+    const response = await fetch(`http://localhost:5000/api/posts/${post._id}/yum`, {
+      method: "PATCH",
+    });
 
-    // TODO: fetch('/api/posts/yum', { method: 'POST', body: JSON.stringify({ postId: post.id }) })
-    console.log("Yummed post:", post.recipeName);
-  };
+    if (response.ok) {
+      const updatedPost = await response.json();
+      
+      // 2. Update local UI state with the new count from the server
+      setCount(updatedPost.kudosCount);
+      setYummed(true);
+    }
+  } catch (err) {
+    console.error("Error yumming:", err);
+  }
+};
 
   if (!post) return null;
 
 
   return (
     <div className="recipe-card">
+        {/* Delete Button (Absolute positioned in top-right) */}
+    <button className="delete-post-btn" onClick={handleDelete}>
+      <LuTrash2 size={18} />
+    </button>
       {/* 1. Header: User Info */}
       <div className="card-header">
         <img src={post.userAvatar} alt={post.username} className="avatar" />
@@ -76,14 +159,55 @@ const getDomainName = (url) => {
         )}
       </div>
 <div className="image-container">
-  {/* Layer 1: The Swipeable Images */}
-  <div className="image-scroller">
-    {post.dishImages.map((img, index) => (
-      <div className="image-slide" key={index}>
-        <img src={img} alt="Dish" className="dish-img" />
-      </div>
-    ))}
-  </div>
+        {/* [NEW] Navigation Arrows (Only show if multiple images) */}
+        {post.dishImages?.length > 1 && (
+          <>
+            {currentIndex > 0 && (
+              <button className="nav-arrow left" onClick={() => scroll("left")}>
+                <LuChevronLeft size={36}style={{ display: 'block' }} />
+              </button>
+            )}
+            {currentIndex < post.dishImages.length - 1 && (
+              <button className="nav-arrow right" onClick={() => scroll("right")}>
+                <LuChevronRight size={36}style={{ display: 'block' }} />
+              </button>
+            )}
+            
+            {/* [NEW] Image Counter Pill */}
+            <div className="image-counter-pill">
+              {currentIndex + 1} / {post.dishImages.length}
+            </div>
+          </>
+        )}
+
+        {/* [NEW] Image Scroller with Ref and Scroll Listener */}
+        <div 
+          className="image-scroller" 
+          ref={scrollRef} 
+          onScroll={handleScroll}
+        >
+          {post.dishImages?.map((img, index) => (
+            <div className="image-slide" key={index}>
+              <img src={img} alt="Dish" className="dish-img" />
+            </div>
+          ))}
+        </div>
+
+        {/* [NEW] Dot Indicators */}
+        {post.dishImages?.length > 1 && (
+          <div className="image-dots">
+            {post.dishImages.map((_, i) => (
+              <div 
+                key={i} 
+                className={`dot ${i === currentIndex ? "active" : ""}`}
+                onClick={() => {
+                  const width = scrollRef.current.offsetWidth;
+                  scrollRef.current.scrollTo({ left: width * i, behavior: "smooth" });
+                }}
+              ></div>
+            ))}
+          </div>
+        )}
 
   {/* Layer 2: The Overlays (Siblings to the scroller, not inside it) */}
   <div className="tags-overlay">
@@ -129,6 +253,39 @@ const getDomainName = (url) => {
           
         </div>
       </div>
+      {/* COMMENT THREAD */}
+    <div className="comment-section">
+     <div className="comments-display">
+  {/* 1. Safe Check for the 'View All' button */}
+  {comments?.length > 1 && !showAll && (
+    <button className="view-more-btn" onClick={() => setShowAll(true)}>
+      View all {comments.length} comments
+    </button>
+  )}
+
+  {/* 2. Safe Mapping of comments */}
+  {/* We add ?. after 'comments' and after 'slice' to prevent the crash */}
+  {(showAll ? comments : comments?.slice(-1))?.map((c, i) => (
+    <div key={i} className="comment-line">
+      <span className="comment-user">{c.username || "Guest"}</span>
+      <span className="comment-text">{c.text}</span>
     </div>
+  ))}
+  
+  {/* 3. Show a placeholder if there are no comments yet (Optional but nice) */}
+  {comments?.length === 0 && (
+    <p className="no-comments-text">No comments yet. Be the first!</p>
+  )}
+</div>
+      <form className="comment-form" onSubmit={handleCommentSubmit}>
+        <input 
+          placeholder="Add a comment..." 
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+        />
+        <button type="submit"><LuSend size={16} /></button>
+      </form>
+    </div>
+  </div>
   );
 }

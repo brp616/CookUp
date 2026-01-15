@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const postSchema = new mongoose.Schema({
  username: String,
@@ -15,7 +15,15 @@ const postSchema = new mongoose.Schema({
   sourceUrl: String,           // e.g., "https://www.seriouseats.com/..."
   sourceName: String,          // e.g., "Serious Eats"
   originalRecipeName: String   // e.g., "The Best Crispy Roast Potatoes"
-}, { timestamps: true });
+,
+comments: [{
+    text: String,
+    username: String,
+    createdAt: { type: Date, default: Date.now }
+  }]},
+{ timestamps: true });
 
 
-module.exports = mongoose.model('Post', postSchema);
+// Ensure this EXACT line is at the bottom
+const Post = mongoose.model('Post', postSchema);
+export default Post;

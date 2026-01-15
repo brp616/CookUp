@@ -380,3 +380,89 @@
   letter-spacing: 0.5px;
   font-size: 0.75rem;
 }
+.nav-arrow {
+  /* Step 1: Remove top/transform to avoid conflicts */
+  position: absolute;
+  top: 50%; 
+  transform: none; 
+
+  /* Step 2: Perfect Circle */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  
+  /* Step 3: Center the icon inside */
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  
+  /* Step 4: Reset Button Defaults */
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 100;
+  cursor: pointer;
+}
+
+.nav-arrow.left { left: 12px; }
+.nav-arrow.right { right: 12px; }
+
+/* The "Strange Behavior" Killer */
+.nav-arrow svg {
+  width: 24px;
+  height: 24px;
+  display: block; /* Removes the invisible text-line gap */
+  flex-shrink: 0; /* Prevents icon from collapsing to 0 width */
+}
+
+.nav-arrow:hover { background: white; scale: 1.1; }
+
+/* Counter Pill Position Update */
+.image-counter-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  z-index: 30;
+}
+
+/* Delete Button */
+.recipe-card { position: relative; } /* Ensure card is parent for positioning */
+
+.delete-post-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: block;
+  padding: 8px;
+  cursor: pointer;
+  z-index: 10;
+  color: #ff4757;
+  transition: 0.2s;
+}
+
+.delete-post-btn:hover { background: #ff4757; color: white; }
+
+/* Comment Thread */
+.comment-section { padding: 12px 16px; border-top: 1px solid #eee; }
+.comment-line { font-size: 0.9rem; margin-bottom: 5px; }
+.comment-user { font-weight: bold; margin-right: 8px; color: #333; }
+.view-more-btn { 
+  background: none; border: none; color: #888; 
+  font-size: 0.8rem; cursor: pointer; margin-bottom: 8px; 
+}
+.comment-form { display: flex; gap: 10px; margin-top: 10px; }
+.comment-form input { flex: 1; border: none; outline: none; font-size: 0.9rem; }
+.comment-form button { background: none; border: none; color: #2ecc71; cursor: pointer; }
