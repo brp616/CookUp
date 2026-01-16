@@ -16,6 +16,10 @@ const postSchema = new mongoose.Schema({
   sourceName: String,          // e.g., "Serious Eats"
   originalRecipeName: String   // e.g., "The Best Crispy Roast Potatoes"
 ,
+cookbookCategory: { 
+    type: String, 
+    default: "none" 
+  },
 comments: [{
     text: String,
     username: String,

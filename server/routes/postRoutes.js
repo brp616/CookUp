@@ -63,4 +63,18 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.patch("/:id/category", async (req, res) => {
+  try {
+    const { category } = req.body;
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.id,
+      { cookbookCategory: category },
+      { new: true }
+    );
+    res.json(updatedPost);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 export default router;
