@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { LuX, LuUpload, LuLink, LuLoader, LuClock, LuFlame, LuStar, LuTag } from "react-icons/lu";
 import "../styles/createPost.css";
 
+
 // Replace these with your actual Cloudinary credentials
 const CLOUD_NAME = "ddhhjsobx"; 
 const UPLOAD_PRESET = "Cookup_uploads";
@@ -17,6 +18,10 @@ export default function CreatePost({ isOpen, onClose }) {
   const [rating, setRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+const [cookbookCategory, setCookbookCategory] = useState("none");
+
+
+
 
   const tagOptions = {
     Diet: ["Gluten-Free", "Vegan", "Vegetarian", "Keto", "Dairy-Free"],
@@ -79,6 +84,7 @@ export default function CreatePost({ isOpen, onClose }) {
       difficulty,
       rating,
       tags: selectedTags,
+      cookbookCategory: cookbookCategory // Send the selected category to the server
       // Optional: username: "Current Logged In User"
     };
 
@@ -200,7 +206,23 @@ export default function CreatePost({ isOpen, onClose }) {
               ))}
             </div>
           </div>
-
+                <div className="form-group">
+      <label>Add to Cookbook</label>
+      <select 
+  value={cookbookCategory} 
+  onChange={(e) => setCookbookCategory(e.target.value)}
+  className="category-select"
+>
+  <option value="none">🌍 General Feed</option>
+  
+  {/* This loop makes the dropdown match your shelf exactly */}
+  {myCookbooks.map(book => (
+    <option key={book.id} value={book.category}>
+      {book.icon} {book.title}
+    </option>
+    ))}
+</select>
+    </div>
           <div className="image-upload-zone">
             <input type="file" multiple onChange={handleImageUpload} id="file-input" hidden />
             <label htmlFor="file-input" className="upload-btn">

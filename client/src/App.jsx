@@ -1,49 +1,99 @@
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Feed from "./components/Feed.jsx";
-import "./App.css";
+import Cookbooks from "./components/CookBookPage.jsx";
+import CreatePost from './components/CreatePost.jsx';
 import { LuPlus } from "react-icons/lu";
-import React, { useState } from 'react';
-import CreatePost from './components/CreatePost.jsx'; // Adjust path if needed
+import "./App.css";
 
 function App() {
-
-  // 1. Initialize the state
+  // 1. State Initialization
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [posts, setPosts] = useState([]); 
+ const [myCookbooks, setMyCookbooks] = useState([
+  { 
+    _id: 'default-1', 
+    title: "Cooked It", 
+    subtitle: "Tried & True", 
+    color: "#f3d2a2", 
+    icon: "✅", 
+    category: "cooked" 
+  },
+  { 
+    _id: 'default-2', 
+    title: "To Cook", 
+    subtitle: "Future Feasts", 
+    color: "#a2d2f3", 
+    icon: "⏳", 
+    category: "to-cook" 
+  }
+]);
+
+  // 2. Single Unified Fetch Call
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch both simultaneously
+        const [postRes, bookRes] = await Promise.all([
+          fetch("http://localhost:5000/api/posts"),
+          fetch("http://localhost:5000/api/cookbooks")
+        ]);
+
+        const postData = await postRes.json();
+        const bookData = await bookRes.json();
+
+        // Ensure we are setting arrays
+        setPosts(Array.isArray(postData) ? postData : (postData.posts || []));
+        setMyCookbooks(Array.isArray(bookData) ? bookData : []);
+        
+        console.log("Data loaded successfully");
+      } catch (err) {
+        console.error("Fetch failed:", err);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
     <div className="app-container">
-      {/* 2. The Button triggers the state to 'true' */}
+      {/* Floating Add Button */}
       <div className="add-cook-container">
         <button className="add-cook-btn" onClick={() => setIsModalOpen(true)}>
-          <LuPlus size={28} />
-          <span className="add-cook-tooltip">Add Cook</span>
+          <LuPlus size={32} strokeWidth={3} />
+          <span className="add-cook-tooltip">Add Post</span>
         </button>
       </div>
 
-      {/* 3. Pass the state and the closer function to the Modal */}
+      {/* Global Upload Modal */}
       <CreatePost 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
+        myCookbooks={myCookbooks}
       />
-    <div className="add-cook-container">
-  <button className="add-cook-btn" onClick={() => setIsModalOpen(true)}>
-    <LuPlus size={64} strokeWidth={3} />
-    <span className="add-cook-tooltip">Add Cook</span>
-  </button>
-</div>,
-    <BrowserRouter>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Feed />} />
-        <Route path="/cookbooks" element={<h1>Cookbooks</h1>} />
-        <Route path="/fresh" element={<h1>What's Fresh</h1>} />
-        <Route path="/profile" element={<h1>Profile</h1>} />
-        <Route path="/contact" element={<h1>Contact Us</h1>} />
-      </Routes>
-    </BrowserRouter>
-  
-  </div>
+
+      <BrowserRouter>
+        <Navbar />
+        <Routes>
+          {/* FIXED: 'posts={posts}' must be lowercase to match Feed.jsx */}
+          <Route path="/" element={
+            <Feed posts={posts} myCookbooks={myCookbooks}/>
+          } />
+          
+          <Route path="/cookbooks" element={
+            <Cookbooks 
+              allPosts={posts} 
+              myCookbooks={myCookbooks} 
+              setMyCookbooks={setMyCookbooks}
+            />
+          } />
+
+          <Route path="/fresh" element={<h1>What's Fresh</h1>} />
+          <Route path="/profile" element={<h1>Profile</h1>} />
+          <Route path="/contact" element={<h1>Contact Us</h1>} />
+        </Routes>
+      </BrowserRouter>
+    </div>
   );
 }
 

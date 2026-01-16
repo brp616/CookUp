@@ -1,30 +1,31 @@
 import RecipePost from "./RecipePost.jsx";
-import React, { useState, useEffect } from "react";
+import React from "react";
+// Feed.jsx
+export default function Feed({ posts, myCookbooks }) {
+  // LOG 1: Is the variable even getting here?
+  console.log("Feed received posts:", posts);
 
-
-export default function Feed() {
-  const [posts, setPosts] = useState([]);
-
-  useEffect(() => {
-    // This runs as soon as the page loads
-    const fetchPosts = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/posts");
-        const data = await response.json();
-        setPosts(data); // Replaces hardcoded data with real DB data
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      }
-    };
-
-    fetchPosts();
-  }, []); // The empty array [] means it only runs once on mount
+  // LOG 2: If it's not an array, something is wrong with the fetch
+  if (!Array.isArray(posts)) {
+    return <p>Error: Data is not in list format.</p>;
+  }
 
   return (
     <div className="feed">
-      {posts.map(post => (
-        <RecipePost key={post._id} post={post} />
-      ))}
+      {posts.length > 0 ? (
+        posts.map((post) => (
+          <RecipePost 
+            key={post._id} 
+            post={post} 
+            myCookbooks={myCookbooks} 
+          />
+        ))
+      ) : (
+        <div className="no-data-msg">
+           <p>Your shelf is empty!</p>
+           <p>Try adding a recipe or check if your MongoDB is connected.</p>
+        </div>
+      )}
     </div>
   );
 }

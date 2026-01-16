@@ -466,3 +466,80 @@
 .comment-form { display: flex; gap: 10px; margin-top: 10px; }
 .comment-form input { flex: 1; border: none; outline: none; font-size: 0.9rem; }
 .comment-form button { background: none; border: none; color: #2ecc71; cursor: pointer; }
+
+.post-actions {
+  display: flex;
+  gap: 15px;
+  padding: 10px 16px;
+  position: relative; /* Essential for the menu to align to this bar */
+}
+
+.move-wrapper {
+  position: relative;
+}
+
+.move-trigger-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.move-trigger-btn:hover { transform: scale(1.1); }
+
+.move-dropdown-menu {
+  position: absolute;
+  bottom: 40px; /* Pops UP instead of DOWN so it doesn't cover content */
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  width: 160px;
+  z-index: 999;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  z-index: 100000000;
+}
+
+.move-dropdown-menu header {
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #999;
+  padding: 5px 10px;
+}
+
+.move-dropdown-menu button {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.move-dropdown-menu button:hover {
+  background: #f5f5f5;
+  color: #2ecc71;
+}
+
+.category-indicator-badge {
+  font-size: 0.75rem;
+  color: #666;
+  background: #f0f0f0;
+  padding: 4px 10px;
+  margin: 0 16px 10px; /* Aligns with your card's side padding */
+  border-radius: 4px;
+  display: inline-block;
+  border-left: 3px solid #2ecc71; /* A nice green accent */
+}
+
+.active-cat {
+  background-color: #e8f5e9 !important; /* Light green highlight */
+  font-weight: bold;
+  color: #2ecc71;
+}

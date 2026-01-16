@@ -4,12 +4,12 @@ import { FaBowlFood } from "react-icons/fa6";
 import "../styles/RecipePost.css";
 
 
-
-export default function RecipePost({ post }) {
+export default function RecipePost({ post,myCookbooks }) {
     
     const [comments, setComments] = useState(post.comments || []);
 const [commentText, setCommentText] = useState("");
 const [showAll, setShowAll] = useState(false);
+
     
 // --- DELETE LOGIC ---
 const handleDelete = async () => {
@@ -46,6 +46,27 @@ const handleCommentSubmit = async (e) => {
     }
   } catch (err) {
     console.error("Error:", err);
+  }
+};
+
+const [showMoveMenu, setShowMoveMenu] = useState(false);
+const [currentCategory, setCurrentCategory] = useState(post.cookbookCategory || "none");
+
+const handleMoveCategory = async (newCategory) => {
+  try {
+    const res = await fetch(`http://localhost:5000/api/posts/${post._id}/category`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category: newCategory })
+    });
+
+    if (res.ok) {
+      const updated = await res.json();
+      setCurrentCategory(updated.cookbookCategory);
+      setShowMoveMenu(false); // Close the menu after picking
+    }
+  } catch (err) {
+    console.error("Failed to move post:", err);
   }
 };
 
@@ -143,7 +164,11 @@ const getDomainName = (url) => {
       <div className="card-content">
         <h2 className="recipe-title">{post.recipeName}</h2>
         <p className="recipe-description">{post.description}</p>
-      
+      {currentCategory !== "none" && (
+      <div className="category-indicator-badge">
+        📂 Filed in: <strong>{currentCategory}</strong>
+      </div>
+    )}
 
 {/* NEW: Source Link Section */}
         {post.sourceUrl && (
@@ -286,6 +311,33 @@ const getDomainName = (url) => {
         <button type="submit"><LuSend size={16} /></button>
       </form>
     </div>
+    {/* 3. NEW MOVE BUTTON & MENU */}
+      <div className="move-wrapper">
+        <button 
+          className="move-trigger-btn" 
+          onClick={() => setShowMoveMenu(!showMoveMenu)}
+          title="Move to Cookbook"
+        >
+          🔖
+        </button>
+
+        {showMoveMenu && (
+          <div className="move-dropdown-menu">
+            <header>Organize to...</header>
+           <button onClick={() => handleMoveCategory("none")}>🌍 General Feed</button>
+    
+    {myCookbooks.map(book => (
+      <button 
+        key={book.id}
+        className={currentCategory === book.category ? "active-cat" : ""} 
+        onClick={() => handleMoveCategory(book.category)}
+      >
+        {book.icon} {book.title}
+      </button>
+    ))}
+          </div>
+        )}
+      </div>
   </div>
   );
 }
