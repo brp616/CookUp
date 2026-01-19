@@ -10,13 +10,14 @@ export default function RecipePost({ post,myCookbooks }) {
     const [comments, setComments] = useState(post.comments || []);
 const [commentText, setCommentText] = useState("");
 const [showAll, setShowAll] = useState(false);
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
     
 // --- DELETE LOGIC ---
 const handleDelete = async () => {
   if (window.confirm("Are you sure you want to delete this cook?")) {
     try {
-      const res = await fetch(`http://localhost:5000/api/posts/${post._id}`, {
+      const res = await fetch(`${API_URL}/api/posts/${post._id}`, {
         method: "DELETE",
       });
       if (res.ok) window.location.reload(); // Refresh feed to remove post
@@ -32,7 +33,7 @@ const handleCommentSubmit = async (e) => {
   if (!commentText.trim()) return;
 
   try {
-    const res = await fetch(`http://localhost:5000/api/posts/${post._id}/comments`, {
+    const res = await fetch(`${API_URL}/api/posts/${post._id}/comments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: commentText, username: "ChefUser" }),
@@ -55,7 +56,7 @@ const [currentCategory, setCurrentCategory] = useState(post.cookbookCategory || 
 
 const handleMoveCategory = async (newCategory) => {
   try {
-    const res = await fetch(`http://localhost:5000/api/posts/${post._id}/category`, {
+    const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ category: newCategory })
@@ -127,7 +128,7 @@ const getDomainName = (url) => {
  const handleYum = async () => {
   try {
     // 1. Tell the server to increment the count in DB
-    const response = await fetch(`http://localhost:5000/api/posts/${post._id}/yum`, {
+    const response = await fetch(`${API_URL}/api/posts/${post._id}/yum`, {
       method: "PATCH",
     });
 

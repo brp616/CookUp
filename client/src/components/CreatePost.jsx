@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { LuX, LuUpload, LuLink, LuLoader, LuClock, LuFlame, LuStar, LuTag } from "react-icons/lu";
 import "../styles/createPost.css";
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 
 
 // Replace these with your actual Cloudinary credentials
@@ -98,7 +100,7 @@ const [cookbookCategory, setCookbookCategory] = useState("none");
     };
 
     try {
-      const response = await fetch("http://localhost:5000/api/posts", { // Update to your API URL
+      const response = await fetch("${API_URL}/api/posts", { // Update to your API URL
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCook),

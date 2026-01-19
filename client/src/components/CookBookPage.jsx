@@ -1,6 +1,7 @@
 import React, { useState, memo } from 'react';
 import RecipePost from './RecipePost'; 
 import '../styles/Cookbooks.css';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // We receive these variables from App.jsx as "props"
 const Cookbooks = ({ allPosts, myCookbooks, setMyCookbooks }) => {
@@ -17,7 +18,7 @@ const Cookbooks = ({ allPosts, myCookbooks, setMyCookbooks }) => {
   const handleDeleteCookbook = async (id) => {
     if (window.confirm("Are you sure? This won't delete your recipes, just the cookbook folder.")) {
       try {
-        const response = await fetch(`http://localhost:5000/api/cookbooks/${id}`, {
+        const response = await fetch(`${API_URL}/api/cookbooks/${id}`, {
           method: 'DELETE',
         });
 
@@ -43,7 +44,7 @@ const Cookbooks = ({ allPosts, myCookbooks, setMyCookbooks }) => {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/api/cookbooks', {
+      const response = await fetch('${API_URL}/api/cookbooks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bookToSave)

@@ -48,8 +48,8 @@ const handleLogout = () => {
       try {
         // Fetch both simultaneously
         const [postRes, bookRes] = await Promise.all([
-          fetch("http://localhost:5000/api/posts"),
-          fetch("http://localhost:5000/api/cookbooks")
+          fetch("${API_URL}/api/posts"),
+          fetch("${API_URL}/api/cookbooks")
         ]);
 
         const postData = await postRes.json();

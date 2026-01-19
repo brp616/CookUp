@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import RecipePost from "../components/RecipePost"; 
 import "../styles/Profile.css";
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function Profile({ currentUser, setCurrentUser }) {
   const { userId } = useParams();
@@ -24,7 +25,7 @@ export default function Profile({ currentUser, setCurrentUser }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userRes = await fetch(`http://localhost:5000/api/auth/${userId}`);
+        const userRes = await fetch(`${API_URL}/api/auth/${userId}`);
         const userData = await userRes.json();
         setProfileUser(userData);
         
@@ -33,7 +34,7 @@ export default function Profile({ currentUser, setCurrentUser }) {
           profilePic: userData.profilePic || "" 
         });
 
-        const postsRes = await fetch("http://localhost:5000/api/posts");
+        const postsRes = await fetch("${API_URL}/api/posts");
         const allPosts = await postsRes.json();
         const userPosts = allPosts.filter(
           (p) => p.user === userId || p.user?._id === userId
@@ -70,7 +71,7 @@ export default function Profile({ currentUser, setCurrentUser }) {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`http://localhost:5000/api/auth/update/${userId}`, {
+      const res = await fetch(`${API_URL}/api/auth/update/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

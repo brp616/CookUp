@@ -1,27 +1,36 @@
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import dotenv from "dotenv";
-import postRoutes from "./routes/postRoutes.js"; // Import the router
-import cookbookRoutes from "./routes/cookbookRoutes.js"; // Import the router
-import authRoutes from "./routes/authRoutes.js";
-
-dotenv.config();
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config(); // Load environment variables
 
 const app = express();
-app.use(cors());
+
+// --- EDIT STARTS HERE ---
+const allowedOrigins = [
+  'http://localhost:5173',               // Local development (Vite)
+  'https://cookup-1gl6.onrender.com'     // Your deployed frontend
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+// --- EDIT ENDS HERE ---
+
 app.use(express.json());
 
-
-// --- LINK ROUTES ---
-// This says: "All routes starting with /api/posts should use postRoutes"
-app.use("/api/posts", postRoutes);
-app.use('/api/cookbooks', cookbookRoutes);
-app.use("/api/auth", authRoutes);
-// --- DATABASE & SERVER START ---
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("🚀 Connected to MongoDB");
-    app.listen(5000, () => console.log("📡 Server running on port 5000"));
-  })
-  .catch(err => console.error("Connection error:", err));
+// Ensure your port is dynamic for Render
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
