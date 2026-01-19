@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/NavBar";
 import Feed from "./components/Feed.jsx";
 import Cookbooks from "./components/CookBookPage.jsx";
 import CreatePost from './components/CreatePost.jsx';
