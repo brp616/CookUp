@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { LuHeart, LuMessageCircle, LuShare2, LuClock, LuFlame, LuStar, LuExternalLink, LuChevronLeft, LuChevronRight, LuTrash2, LuSend } from "react-icons/lu";
 import { FaBowlFood } from "react-icons/fa6";
 import "../styles/RecipePost.css";
+import { Link } from "react-router-dom";
 
 
 export default function RecipePost({ post,myCookbooks }) {
@@ -153,10 +154,29 @@ const getDomainName = (url) => {
     </button>
       {/* 1. Header: User Info */}
       <div className="card-header">
-        <img src={post.userAvatar} alt={post.username} className="avatar" />
+             {post.user ? (
+          <Link to={`/profile/${post.user}`}>
+            <img src={post.userAvatar} alt={post.username} className="avatar" />
+          </Link>
+        ) : (
+          <img src={post.userAvatar} alt={post.username} className="avatar" />
+        )}
         <div className="user-meta">
-          <span className="username">{post.username}</span>
-          <span className="timestamp">{post.timeAgo} • {post.location}</span>
+          {post.user ? (
+            <Link
+              to={`/profile/${post.user}`}
+              className="username"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              {post.username}
+            </Link>
+          ) : (
+            <span className="username">{post.username}</span>
+          )}
+
+          <span className="timestamp">
+            {post.timeAgo} • {post.location}
+          </span>
         </div>
       </div>
 

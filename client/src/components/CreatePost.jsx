@@ -7,7 +7,7 @@ import "../styles/createPost.css";
 const CLOUD_NAME = "ddhhjsobx"; 
 const UPLOAD_PRESET = "Cookup_uploads";
 
-export default function CreatePost({ isOpen, onClose }) {
+export default function CreatePost({ isOpen, onClose, myCookbooks =[], user }) {
   // Form States
   const [images, setImages] = useState([]);
   const [recipeName, setRecipeName] = useState("");
@@ -19,6 +19,7 @@ export default function CreatePost({ isOpen, onClose }) {
   const [selectedTags, setSelectedTags] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
 const [cookbookCategory, setCookbookCategory] = useState("none");
+
 
 
 
@@ -73,9 +74,17 @@ const [cookbookCategory, setCookbookCategory] = useState("none");
   // --- MONGODB SUBMISSION LOGIC ---
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!user || !user._id) {
+      alert("You must be logged in to post!");
+      return;
+    }
+
     
     // Construct the data object to match your MongoDB Schema
     const newCook = {
+              user: user._id, // 👈 Use the ID from the prop
+
       recipeName,
       description,
       sourceUrl,

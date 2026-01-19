@@ -103,3 +103,48 @@
 .navbar-right {
   margin-left: 140px;   /* 👈 pushes search away from Contact Us */
 }
+
+/* --- Login/Logout Buttons --- */
+.nav-btn {
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid var(--deep-walnut);
+  background-color: transparent;
+  color: var(--deep-walnut);
+}
+
+.nav-btn:hover {
+  background-color: var(--deep-walnut);
+  color: white;
+}
+
+/* Logout specific look (Optional: if you want it to look different) */
+button.nav-btn {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Update this section */
+.navbar-right {
+  display: flex;          /* 👈 Align children horizontally */
+  align-items: center;    /* 👈 Center them vertically */
+  gap: 20px;             /* 👈 Space between Search and Login */
+  margin-left: auto;      /* 👈 Pushes the whole group to the right */
+}
+
+/* Add this to handle the text next to the button */
+.auth-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;    /* 👈 Prevents "Hello, User" from wrapping */
+}
+
+.user-greeting {
+  color: var(--white);    /* Use your variable to match the theme */
+  font-weight: 500;
+}

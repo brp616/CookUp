@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import postRoutes from "./routes/postRoutes.js"; // Import the router
 import cookbookRoutes from "./routes/cookbookRoutes.js"; // Import the router
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 // This says: "All routes starting with /api/posts should use postRoutes"
 app.use("/api/posts", postRoutes);
 app.use('/api/cookbooks', cookbookRoutes);
+app.use("/api/auth", authRoutes);
 // --- DATABASE & SERVER START ---
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
