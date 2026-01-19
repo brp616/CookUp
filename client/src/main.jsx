@@ -4,7 +4,7 @@ import './index.css'
 import App from './App.jsx'
 
 import "./styles/variables.css";  // Import CSS variables
-import "./styles/layout.css";     // Import CSS layout
+import "./styles/Layout.css";     // Import CSS layout
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
