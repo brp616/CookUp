@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { FiSearch } from "react-icons/fi";
-import "../styles/navbar.css";
+import "../styles/NavBar.css";
 import logo from "../assets/Logo_NavBar.png";
 
 export default function Navbar({ user, onLogout }) {
