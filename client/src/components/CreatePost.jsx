@@ -100,7 +100,7 @@ const [cookbookCategory, setCookbookCategory] = useState("none");
     };
 
     try {
-      const response = await fetch("${API_URL}/api/posts", { // Update to your API URL
+      const response = await fetch(`${API_URL}/api/posts`, { // Update to your API URL
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCook),

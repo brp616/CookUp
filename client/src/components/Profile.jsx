@@ -34,7 +34,7 @@ export default function Profile({ currentUser, setCurrentUser }) {
           profilePic: userData.profilePic || "" 
         });
 
-        const postsRes = await fetch("${API_URL}/api/posts");
+        const postsRes = await fetch(`${API_URL}/api/posts`);
         const allPosts = await postsRes.json();
         const userPosts = allPosts.filter(
           (p) => p.user === userId || p.user?._id === userId

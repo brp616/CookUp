@@ -9,6 +9,7 @@ import "./App.css";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Profile from "./components/Profile";
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 function App() {
   // 1. State Initialization
@@ -48,8 +49,8 @@ const handleLogout = () => {
       try {
         // Fetch both simultaneously
         const [postRes, bookRes] = await Promise.all([
-          fetch("${API_URL}/api/posts"),
-          fetch("${API_URL}/api/cookbooks")
+          fetch(`${API_URL}/api/posts`),
+          fetch(`${API_URL}/api/cookbooks`)
         ]);
 
         const postData = await postRes.json();

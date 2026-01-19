@@ -25,7 +25,7 @@ export default function Register({ setUser }) {
     }
 
     try {
-      const res = await fetch("${API_URL}/api/auth/register", {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // Send username, email, and password to backend
