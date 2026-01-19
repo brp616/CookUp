@@ -4,8 +4,16 @@ import cookbookRoutes from './routes/cookbookRoutes.js';
 import express from 'express';
 import cors from 'cors'
 import dotenv from 'dotenv';
+import mongoose from 'mongoose'
 
 const app = express();
+
+// Ensure you have MONGO_URI in your .env file
+const mongoURI = process.env.MONGO_URI; 
+
+mongoose.connect(mongoURI)
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch(err => console.error("❌ MongoDB connection error:", err));
 
 // 1. CORS Configuration
 const allowedOrigins = [
