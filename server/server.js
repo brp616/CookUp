@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Import route files (Ensure these have the .js extension)
 import authRoutes from './routes/authRoutes.js';
@@ -12,6 +14,8 @@ import cookbookRoutes from './routes/cookbookRoutes.js';
 dotenv.config();
 
 const app = express();
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // 2. CORS Configuration
 const allowedOrigins = [
@@ -56,6 +60,20 @@ app.use('/api/cookbooks', cookbookRoutes);
 
 // Health Check (To verify the server is live in a browser)
 app.get('/health', (req, res) => res.send('Backend is up and running!'));
+
+// 1. Tell Express where the build files are located
+// This path goes out of 'server' and into 'client/dist'
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Replace your catch-all route with this:
+app.use((req, res, next) => {
+  // If the request starts with /api, it's a backend 404
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ message: "API route not found" });
+  }
+  // Otherwise, send the frontend's index.html
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
 
 // 6. Start Server
 const PORT = process.env.PORT || 10000;
