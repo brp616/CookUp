@@ -5,78 +5,76 @@ import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Import route files (Ensure these have the .js extension)
+// Route imports
 import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import cookbookRoutes from './routes/cookbookRoutes.js';
 
-// 1. Initialize Dotenv
+// Load environment variables
 dotenv.config();
 
 const app = express();
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// 2. CORS Configuration
+/* ============================
+   Middleware
+============================ */
+
+// CORS
 const allowedOrigins = [
-  'http://localhost:5173',               // Local development
-  'https://cookup-1gl6.onrender.com'     // Deployed frontend
+  'http://localhost:5173',
+  'https://cookup-1gl6.onrender.com'
 ];
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true
+  })
+);
 
-// Apply CORS to ALL routes
-app.use(cors(corsOptions));
-
-// 3. Global Middleware
+// Body parsing
 app.use(express.json());
 
-// 4. Database Connection
-const mongoURI = process.env.MONGO_URI; 
+/* ============================
+   Database
+============================ */
 
-mongoose.connect(mongoURI)
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch(err => {
-    console.error("❌ MongoDB connection error:", err);
-  });
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ Connected to MongoDB'))
+  .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-// 5. Connect Routes
-// This maps your route files to specific URL paths
+/* ============================
+   API Routes (MUST come first)
+============================ */
+
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/cookbooks', cookbookRoutes);
 
-// Health Check (To verify the server is live in a browser)
-app.get('/health', (req, res) => res.send('Backend is up and running!'));
+// Health check
+app.get('/health', (req, res) => {
+  res.send('Backend is up and running!');
+});
 
-// 1. Tell Express where the build files are located
-// This path goes out of 'server' and into 'client/dist'
+/* ============================
+   Frontend Serving
+============================ */
+
+// Serve React build
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
-// Replace your catch-all route with this:
-app.use((req, res, next) => {
-  // If the request starts with /api, it's a backend 404
-  if (req.path.startsWith('/api')) {
-    return res.status(404).json({ message: "API route not found" });
-  }
-  // Otherwise, send the frontend's index.html
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+// API 404 handler (IMPORTANT: before frontend fallback)
+app.use('/api', (req, res) => {
+  res.status(404).json({ message: 'API route not found' });
 });
 
-// 6. Start Server
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// React Router fallback (ALWAYS last)
+app
