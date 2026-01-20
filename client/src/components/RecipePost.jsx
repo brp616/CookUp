@@ -10,7 +10,7 @@ export default function RecipePost({ post,myCookbooks }) {
     const [comments, setComments] = useState(post.comments || []);
 const [commentText, setCommentText] = useState("");
 const [showAll, setShowAll] = useState(false);
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 
     
 // --- DELETE LOGIC ---

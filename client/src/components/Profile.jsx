@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import RecipePost from "../components/RecipePost"; 
 import "../styles/Profile.css";
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 
 export default function Profile({ currentUser, setCurrentUser }) {
   const { userId } = useParams();
