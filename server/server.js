@@ -68,6 +68,7 @@ app.get('/health', (req, res) => {
    Frontend Serving
 ============================ */
 
+
 // Serve React build
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
@@ -78,3 +79,8 @@ app.use('/api', (req, res) => {
 
 // React Router fallback (ALWAYS last)
 app
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server listening on port ${PORT}`);
+});
