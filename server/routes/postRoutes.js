@@ -1,6 +1,6 @@
 import express from "express";
 // Import WITHOUT curly braces because it's a default export
-import Post from "../models/post.js"; 
+import Post from "../models/Post.js"; 
 
 const router = express.Router();
 
