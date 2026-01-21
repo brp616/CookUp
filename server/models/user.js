@@ -6,22 +6,39 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    lowercase: true,
+    trim: true
   },
   email: {
     type: String,
     required: true,
-    unique: true, // Prevents two users from using the same email
-    lowercase: true, // Saves email as lowercase
-    trim: true
+    unique: true,
+    lowercase: true,
+    trim: true,
   },
   password: {
     type: String,
-    required: true,
+    // We remove "required: true" to allow Google Users to exist 
+    // without a standard password field.
+  },
+  profilePic: {
+    type: String,
+    default: "", // Stores the Cloudinary URL or Google Image URL
+  },
+  bio: {
+    type: String,
+    max: 150,
+    default: "",
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true, // "sparse" allows multiple users to have 'null' for this field
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-});
+}, { timestamps: true }); // Automatically adds 'updatedAt' fields
 
 export default mongoose.model("User", UserSchema);

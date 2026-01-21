@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const postSchema = new mongoose.Schema({
+    user: String,
  username: String,
   userAvatar: String,
   recipeName: String,
@@ -11,8 +12,9 @@ const postSchema = new mongoose.Schema({
   difficulty: String,
   rating: { type: Number, default: 5 },
   tags: [String], // Array of strings: ['dinner', 'vegan']
-  kudosCount: { type: Number, default: 0 },
-  sourceUrl: String,           // e.g., "https://www.seriouseats.com/..."
+kudosCount: { type: Number, default: 0 },
+  kudos: { type: [String], default: [] }, // Array of User IDs who clicked Yum
+sourceUrl: String,           // e.g., "https://www.seriouseats.com/..."
   sourceName: String,          // e.g., "Serious Eats"
   originalRecipeName: String   // e.g., "The Best Crispy Roast Potatoes"
 ,
@@ -23,6 +25,7 @@ cookbookCategory: {
 comments: [{
     text: String,
     username: String,
+    userAvatar: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now }
   }]},
 { timestamps: true });
