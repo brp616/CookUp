@@ -1,16 +1,14 @@
-import React, { useState } from "react";
+import React, { useState} from "react";
 import { LuX, LuUpload, LuLink, LuLoader, LuClock, LuFlame, LuStar, LuTag } from "react-icons/lu";
 import "../styles/createPost.css";
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
-
-
-
-// Replace these with your actual Cloudinary credentials
 const CLOUD_NAME = "ddhhjsobx"; 
 const UPLOAD_PRESET = "Cookup_uploads";
 
-export default function CreatePost({ isOpen, onClose, myCookbooks =[], user }) {
-  // Form States
+
+
+export default function CreatePost({ isOpen, onClose, myCookbooks = [], user }) {
   const [images, setImages] = useState([]);
   const [recipeName, setRecipeName] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
@@ -20,11 +18,7 @@ export default function CreatePost({ isOpen, onClose, myCookbooks =[], user }) {
   const [rating, setRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
-const [cookbookCategory, setCookbookCategory] = useState("none");
-
-
-
-
+  const [cookbookCategory, setCookbookCategory] = useState("none");
 
   const tagOptions = {
     Diet: ["Gluten-Free", "Vegan", "Vegetarian", "Keto", "Dairy-Free"],
@@ -40,67 +34,83 @@ const [cookbookCategory, setCookbookCategory] = useState("none");
 
   // --- CLOUDINARY LOGIC ---
   const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (images.length + files.length > 3) return alert("Max 3 images!");
+  const files = Array.from(e.target.files);
+  if (images.length + files.length > 3) return alert("Max 3 images!");
+  
+  setIsUploading(true);
+
+  try {
+    const uploadPromises = files.map(async (file) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", UPLOAD_PRESET);
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        { method: "POST", body: formData }
+      );
+
+      if (!response.ok) throw new Error("Upload failed");
+      const data = await response.json();
+      return data.secure_url;
+    });
+
+    const newUrls = await Promise.all(uploadPromises);
     
-    setIsUploading(true);
+    // --- KEY CHANGE START ---
+    // Log exactly what we are about to put into state
+    console.log("Adding these to state:", newUrls);
+    
+    setImages((currentImages) => {
+      const updatedImages = [...currentImages, ...newUrls];
+      console.log("New State will be:", updatedImages);
+      return updatedImages;
+    });
+    // --- KEY CHANGE END ---
 
-    try {
-      const uploadPromises = files.map(async (file) => {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", UPLOAD_PRESET);
-
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-          { method: "POST", body: formData }
-        );
-
-        if (!response.ok) throw new Error("Upload failed");
-        const data = await response.json();
-        return data.secure_url;
-      });
-
-      const uploadedUrls = await Promise.all(uploadPromises);
-      // This correctly uses setImages to update the state
-      setImages((prev) => [...prev, ...uploadedUrls]);
-
-    } catch (error) {
-      console.error("Cloudinary Error:", error);
-      alert("Error uploading images. Check Cloudinary config.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  } catch (error) {
+    console.error("Cloudinary Error:", error);
+    alert("Error uploading images.");
+  } finally {
+    setIsUploading(false);
+    // Important: Clear the file input so you can upload the same file again if needed
+    e.target.value = null; 
+  }
+};
 
   // --- MONGODB SUBMISSION LOGIC ---
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!user || !user._id) {
-      alert("You must be logged in to post!");
-      return;
+      return alert("You must be logged in to post!");
     }
 
-    
-    // Construct the data object to match your MongoDB Schema
-    const newCook = {
-              user: user._id, // 👈 Use the ID from the prop
+    if (images.length === 0) {
+      return alert("Please upload at least one image before sharing.");
+    }
 
-      recipeName,
-      description,
-      sourceUrl,
-      dishImages: images, // The array of URLs from Cloudinary
-      cookTime: Number(cookTime),
-      difficulty,
-      rating,
-      tags: selectedTags,
-      cookbookCategory: cookbookCategory // Send the selected category to the server
-      // Optional: username: "Current Logged In User"
+    const newCook = {
+    user: user._id, 
+  username: user.username,      // Added: Schema expects a username string
+  userAvatar: user.profilePic || "https://api.dicebear.com/7.x/avataaars/svg?seed=" + user.username, // Added: Matches schema field
+  recipeName,
+  description,
+  recipeLink: sourceUrl,         // Fixed: Maps frontend 'sourceUrl' to backend 'recipeLink'
+  sourceUrl: sourceUrl,          // Keeping this since it's also in your schema
+  dishImages: images,            // Matches Schema!
+  cookTime: Number(cookTime),
+  difficulty,
+  rating: Number(rating),        // Ensure it's a number
+  tags: selectedTags,
+  cookbookCategory: cookbookCategory
     };
 
+    // DEBUG: Check this log in your browser console!
+    console.log("FINAL PAYLOAD BEING SENT:", newCook);
+
     try {
-      const response = await fetch(`${API_URL}/api/posts`, { // Update to your API URL
+      const response = await fetch(`${API_URL}/api/posts`, { 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCook),
@@ -108,8 +118,8 @@ const [cookbookCategory, setCookbookCategory] = useState("none");
 
       if (response.ok) {
         alert("Cook Shared Successfully!");
-        onClose(); // Close modal
-        window.location.reload(); // Refresh to see new post
+        onClose(); 
+        window.location.reload(); 
       } else {
         const errorData = await response.json();
         alert(`Error: ${errorData.message}`);
@@ -130,7 +140,6 @@ const [cookbookCategory, setCookbookCategory] = useState("none");
           <button className="close-x" onClick={onClose}><LuX /></button>
         </div>
 
-        {/* Added onSubmit handler here */}
         <form className="modal-form scrollable-form" onSubmit={handleSubmit}>
           
           <div className="input-group">
@@ -217,26 +226,26 @@ const [cookbookCategory, setCookbookCategory] = useState("none");
               ))}
             </div>
           </div>
-                <div className="form-group">
-      <label>Add to Cookbook</label>
-      <select 
-  value={cookbookCategory} 
-  onChange={(e) => setCookbookCategory(e.target.value)}
-  className="category-select"
->
-  <option value="none">🌍 General Feed</option>
-  
-  {/* This loop makes the dropdown match your shelf exactly */}
-  {myCookbooks.map(book => (
-    <option key={book.id} value={book.category}>
-      {book.icon} {book.title}
-    </option>
-    ))}
-</select>
-    </div>
+
+          <div className="form-group">
+            <label>Add to Cookbook</label>
+            <select 
+              value={cookbookCategory} 
+              onChange={(e) => setCookbookCategory(e.target.value)}
+              className="category-select"
+            >
+              <option value="none">🌍 General Feed</option>
+              {myCookbooks.map(book => (
+                <option key={book._id} value={book.category}>
+                  {book.icon} {book.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="image-upload-zone">
             <input type="file" multiple onChange={handleImageUpload} id="file-input" hidden />
-            <label htmlFor="file-input" className="upload-btn">
+            <label htmlFor="file-input" className={`upload-btn ${isUploading ? 'disabled' : ''}`}>
               {isUploading ? <LuLoader className="spinner" /> : <LuUpload />} 
               Upload Photos ({images.length}/3)
             </label>
@@ -244,7 +253,6 @@ const [cookbookCategory, setCookbookCategory] = useState("none");
               {images.map((url, i) => (
                 <div key={i} className="thumb-wrapper">
                   <img src={url} className="thumb-preview" alt="preview" />
-                  {/* Small X to remove images if needed */}
                   <button 
                     type="button" 
                     className="remove-img" 
@@ -257,7 +265,7 @@ const [cookbookCategory, setCookbookCategory] = useState("none");
             </div>
           </div>
 
-          <button type="submit" className="share-btn" disabled={isUploading}>
+          <button type="submit" className="share-btn" disabled={isUploading || images.length === 0}>
             {isUploading ? "Uploading..." : "Share Cook"}
           </button>
         </form>

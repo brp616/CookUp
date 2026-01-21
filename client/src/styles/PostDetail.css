@@ -1,0 +1,68 @@
+.post-detail-page {
+  padding: 120px 20px 60px 20px; /* Extra top padding for the fixed back button */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f8f9fa; /* Light grey to make the white card pop */
+  min-height: 100vh;
+  position: relative;
+}
+
+.detail-content-wrapper {
+  width: 100%;
+  max-width: 600px; /* Matches your feed's standard card width */
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Back to the feed button styling */
+.back-to-feed-btn {
+  position: fixed;
+  top: 100px;
+  left: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: white;
+  color: #333;
+  padding: 10px 18px;
+  border-radius: 50px; /* Pill shape */
+  border: 1px solid #eee;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: all 0.2s ease-in-out;
+  z-index: 1000;
+}
+
+.back-to-feed-btn:hover {
+  background-color: var(--forest-green, #228b22);
+  color: white;
+  transform: translateX(-5px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .back-to-feed-btn {
+    position: absolute; /* Move from fixed to absolute on smaller screens */
+    top: 30px;
+    left: 20px;
+  }
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--forest-green);
+}

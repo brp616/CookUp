@@ -1,0 +1,105 @@
+/* Container to manage the overlay positioning */
+.feed-container {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* The Frosted Glass Overlay */
+.guest-lock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3); /* Tint */
+  backdrop-filter: blur(12px); /* The actual blur */
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000; /* Stays above Navbar/Feed */
+  padding: 20px;
+}
+
+/* The Rounded Angle Rectangle Card */
+.guest-card {
+  background: white;
+  padding: 40px 30px;
+  border-radius: 28px; /* Smooth rounded angles */
+  text-align: center;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
+  max-width: 420px;
+  width: 100%;
+  border: 1px solid rgba(0,0,0,0.05);
+  animation: slideUp 0.5s ease-out;
+}
+
+.guest-card-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.guest-card h2 {
+  color: var(--forest-green, #228b22);
+  margin-bottom: 10px;
+  font-weight: 800;
+}
+
+.guest-card p {
+  margin: 0;
+  color: #444;
+  font-size: 1.1rem;
+}
+
+.guest-card .sub-text {
+  color: #999;
+  font-size: 0.9rem;
+  margin-top: 5px;
+  margin-bottom: 30px;
+}
+
+/* Buttons */
+.guest-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.guest-actions a {
+  display: block;
+  padding: 14px;
+  border-radius: 16px;
+  text-decoration: none;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.btn-login {
+  background: var(--forest-green, #228b22);
+  color: white;
+}
+
+.btn-login:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.btn-register {
+  background: #f0f2f0;
+  color: #333;
+}
+
+.btn-register:hover {
+  background: #e5e8e5;
+}
+
+/* Optional: Blur the background feed */
+.blurred-feed {
+  pointer-events: none; /* User can't click anything in the back */
+  user-select: none;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}

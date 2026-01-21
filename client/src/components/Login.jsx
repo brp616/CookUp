@@ -1,14 +1,19 @@
-// src/pages/Login.jsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
 import "../styles/Auth.css";
-const API_URL = '';
+
+// Ensure this matches your backend URL
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
+
 
 export default function Login({ setUser }) {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // --- STANDARD LOGIN HANDLER ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -21,36 +26,42 @@ export default function Login({ setUser }) {
       });
 
       const data = await res.json();
-      if (!res.ok) {
-  throw new Error(data.message || "Login failed");
-}
 
-// 1. Save to LocalStorage (for persistence when they refresh)
-localStorage.setItem("user", JSON.stringify(data));
+      if (!res.ok) throw new Error(data.message || "Login failed");
 
-// 2. Update Global State (so Navbar and Feed update immediately)
-if (setUser) {
-  setUser(data); 
-}
-
-// 3. Navigate to Home
-navigate("/");
-
-      console.log("LOGIN RESPONSE:", data);
-
-      if (!res.ok) {
-        throw new Error(data.message || "Login failed");
-      }
-
-      // SUCCESS: Save user info to browser storage!
       localStorage.setItem("user", JSON.stringify(data));
-
-      console.log("SAVED USER:", localStorage.getItem("user"));
-
-      // Go to Home Page AND refresh (All in one step)
-      window.location.href = "/";
+      if (setUser) setUser(data);
+      navigate("/");
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  // --- GOOGLE LOGIN HANDLER ---
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      
+      const res = await fetch(`${API_URL}/api/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: decoded.name,
+          email: decoded.email,
+          profilePic: decoded.picture,
+          googleId: decoded.sub
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Google login failed");
+
+      localStorage.setItem("user", JSON.stringify(data));
+      if (setUser) setUser(data);
+      navigate("/");
+    } catch (err) {
+      setError("Google Login failed. Please try again.");
+      console.error(err);
     }
   };
 
@@ -66,23 +77,31 @@ navigate("/");
             placeholder="Username"
             required
             value={formData.username}
-            onChange={(e) =>
-              setFormData({ ...formData, username: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
           />
           <input
             type="password"
             placeholder="Password"
             required
             value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           />
           <button type="submit" className="auth-btn">
             Log In
           </button>
         </form>
+
+        <div className="auth-divider">
+          <span>OR</span>
+        </div>
+
+        <div className="google-login-wrapper">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError("Google Login Failed")}
+            useOneTap
+          />
+        </div>
 
         <p className="auth-footer">
           New here? <Link to="/register">Create Account</Link>

@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
 import "../styles/Auth.css";
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 
 export default function Register({ setUser }) {
-  // 1. Expanded state to include email and confirmPassword
   const [formData, setFormData] = useState({ 
     username: "", 
     email: "", 
@@ -15,11 +17,11 @@ export default function Register({ setUser }) {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // --- STANDARD REGISTER HANDLER ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // 2. Client-side Validation: Check if passwords match
     if (formData.password !== formData.confirmPassword) {
       return setError("Passwords do not match!");
     }
@@ -28,7 +30,6 @@ export default function Register({ setUser }) {
       const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Send username, email, and password to backend
         body: JSON.stringify({
             username: formData.username,
             email: formData.email,
@@ -42,21 +43,42 @@ export default function Register({ setUser }) {
         throw new Error(data.message || "Registration failed");
       }
 
-      // 3. SUCCESS: Save to LocalStorage and update App State
       localStorage.setItem("user", JSON.stringify(data));
-      
-      if (setUser) {
-        setUser(data);
-      }
-
-      console.log("Registration successful, user logged in");
+      if (setUser) setUser(data);
       navigate("/"); 
     } catch (err) {
       setError(err.message);
     }
   };
 
-  // Helper to update state fields dynamically
+  // --- GOOGLE SIGN-UP HANDLER ---
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      
+      const res = await fetch(`${API_URL}/api/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: decoded.name,
+          email: decoded.email,
+          profilePic: decoded.picture,
+          googleId: decoded.sub
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Google registration failed");
+
+      localStorage.setItem("user", JSON.stringify(data));
+      if (setUser) setUser(data);
+      navigate("/");
+    } catch (err) {
+      setError("Google Sign-up failed. Please try again.");
+      console.error(err);
+    }
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -108,6 +130,19 @@ export default function Register({ setUser }) {
             Create Account
           </button>
         </form>
+
+        <div className="auth-divider">
+          <span>OR</span>
+        </div>
+
+        <div className="google-login-wrapper">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError("Google Sign-up Failed")}
+            text="signup_with"
+            useOneTap
+          />
+        </div>
 
         <p className="auth-footer">
           Already have an account? <Link to="/login">Log In</Link>

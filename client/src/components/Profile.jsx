@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import RecipePost from "../components/RecipePost"; 
 import "../styles/Profile.css";
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 
-export default function Profile({ currentUser, setCurrentUser }) {
+// Use environment variable to match App.jsx
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000'; 
+
+export default function Profile({ currentUser, setUser }) {
+  // Matches the path="/profile/:userId" in App.jsx
   const { userId } = useParams();
   const [profileUser, setProfileUser] = useState(null); 
   const [posts, setPosts] = useState([]);
@@ -17,51 +20,60 @@ export default function Profile({ currentUser, setCurrentUser }) {
     profilePic: ""
   });
 
-  // Default Chef Image Fallback
   const defaultAvatar = "https://png.pngtree.com/png-clipart/20241030/original/pngtree-a-cheerful-cook-emoji-icon-png-image_16560077.png";
 
   const isOwnProfile = currentUser?._id === userId;
 
   useEffect(() => {
     const fetchData = async () => {
+      // Safety check: if there's no userId in URL, don't attempt fetch
+      if (!userId) return;
+
       try {
+        setLoading(true);
+        // 1. Fetch User Data
         const userRes = await fetch(`${API_URL}/api/auth/${userId}`);
         const userData = await userRes.json();
-        setProfileUser(userData);
         
-        setEditData({ 
-          bio: userData.bio || "", 
-          profilePic: userData.profilePic || "" 
-        });
+        if (userRes.ok) {
+          setProfileUser(userData);
+          setEditData({ 
+            bio: userData.bio || "", 
+            profilePic: userData.profilePic || "" 
+          });
+        }
 
+        // 2. Fetch All Posts and Filter
         const postsRes = await fetch(`${API_URL}/api/posts`);
         const allPosts = await postsRes.json();
-        const userPosts = allPosts.filter(
-          (p) => p.user === userId || p.user?._id === userId
-        );
-        setPosts(userPosts);
+        
+        if (Array.isArray(allPosts)) {
+          const userPosts = allPosts.filter(
+            (p) => p.user === userId || p.user?._id === userId || p.userId === userId
+          );
+          setPosts(userPosts);
+        }
       } catch (err) {
         console.error("Error fetching profile:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
-  }, [userId]);
 
-  // CLOUDINARY UPLOAD HANDLER
+    fetchData();
+  }, [userId]); // Only runs when URL userId changes
+
   const handleUpload = () => {
     window.cloudinary.openUploadWidget(
       {
-        cloudName: "ddhhjsobx", // Replace with your Cloudinary Cloud Name
-        uploadPreset: "Cookup_uploads",   // Replace with your Unsigned Upload Preset
+        cloudName: "ddhhjsobx", 
+        uploadPreset: "Cookup_uploads",   
         sources: ["local", "url", "camera"],
         multiple: false,
         theme: "minimal"
       },
       (error, result) => {
         if (!error && result && result.event === "success") {
-          console.log("Upload success!", result.info.secure_url);
           setEditData({ ...editData, profilePic: result.info.secure_url });
         }
       }
@@ -85,9 +97,12 @@ export default function Profile({ currentUser, setCurrentUser }) {
       const updatedUser = await res.json();
       
       setProfileUser(updatedUser);
-      setCurrentUser(updatedUser); 
-      localStorage.setItem("user", JSON.stringify(updatedUser));
       
+      if (setUser) {
+        setUser(updatedUser); 
+      }
+      
+      localStorage.setItem("user", JSON.stringify(updatedUser));
       setIsEditing(false);
     } catch (err) {
       alert(err.message);
@@ -104,6 +119,7 @@ export default function Profile({ currentUser, setCurrentUser }) {
           <img
             src={profileUser.profilePic || defaultAvatar}
             alt={profileUser.username}
+            onError={(e) => { e.target.src = defaultAvatar; }}
           />
         </div>
 
@@ -112,17 +128,11 @@ export default function Profile({ currentUser, setCurrentUser }) {
 
           {isEditing ? (
             <form className="edit-profile-form" onSubmit={handleUpdate}>
-              <button 
-                type="button" 
-                className="upload-btn" 
-                onClick={handleUpload}
-              >
+              <button type="button" className="upload-btn" onClick={handleUpload}>
                 Change Profile Picture
               </button>
               
-              {editData.profilePic && (
-                <p className="pic-ready-msg">New image selected! ✅</p>
-              )}
+              {editData.profilePic && <p className="pic-ready-msg">New image selected! ✅</p>}
 
               <textarea
                 placeholder="Tell us about your cooking style..."
@@ -149,7 +159,7 @@ export default function Profile({ currentUser, setCurrentUser }) {
           <div className="profile-stats">
             <span><strong>{posts.length}</strong> Cooks</span>
             <span><strong>12</strong> Followers</span>
-            <span><strong>58</strong> Yums Received</span>
+            <span><strong>58</strong> Yums</span>
           </div>
         </div>
       </div>

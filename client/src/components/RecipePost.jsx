@@ -4,361 +4,271 @@ import { FaBowlFood } from "react-icons/fa6";
 import "../styles/RecipePost.css";
 import { Link } from "react-router-dom";
 
+export default function RecipePost({ post, myCookbooks }) {
+    // --- AUTH CHECK ---
+    const currentUser = JSON.parse(localStorage.getItem("user"));
+    const currentUserId = currentUser?._id;
 
-export default function RecipePost({ post,myCookbooks }) {
-    
     const [comments, setComments] = useState(post.comments || []);
-const [commentText, setCommentText] = useState("");
-const [showAll, setShowAll] = useState(false);
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
+    const [commentText, setCommentText] = useState("");
+    const [showCommentModal, setShowCommentModal] = useState(false); // NEW Modal State
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 
-    
-// --- DELETE LOGIC ---
-const handleDelete = async () => {
-  if (window.confirm("Are you sure you want to delete this cook?")) {
-    try {
-      const res = await fetch(`${API_URL}/api/posts/${post._id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) window.location.reload(); // Refresh feed to remove post
-    } catch (err) {
-      console.error("Delete failed:", err);
-    }
-  }
-};
+    // --- TOGGLE MODAL ---
+    const toggleModal = () => {
+        setShowCommentModal(!showCommentModal);
+        document.body.style.overflow = !showCommentModal ? 'hidden' : 'unset';
+    };
 
-// --- COMMENT LOGIC ---
-const handleCommentSubmit = async (e) => {
-  e.preventDefault();
-  if (!commentText.trim()) return;
+    // ... (Keep handleShare, handleDelete exactly as they were) ...
 
-  try {
-    const res = await fetch(`${API_URL}/api/posts/${post._id}/comments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: commentText, username: "ChefUser" }),
-    });
+    const handleShare = async () => {
+      const shareData = {
+        title: `Check out this recipe: ${post.recipeName}`,
+        text: `I found this amazing recipe for ${post.recipeName} on CookUp!`,
+        url: `${window.location.origin}/post/${post._id}`, 
+      };
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+        } else {
+          await navigator.clipboard.writeText(shareData.url);
+          alert("Link copied to clipboard! 📋");
+        }
+      } catch (err) { console.error("Error sharing:", err); }
+    };
 
-    const updatedPost = await res.json();
-    
-    // FIX: Make sure you are setting the state to the NEW comments array
-    if (updatedPost && updatedPost.comments) {
-      setComments(updatedPost.comments); 
-      setCommentText(""); // Clear the input
-    }
-  } catch (err) {
-    console.error("Error:", err);
-  }
-};
+    const handleDelete = async () => {
+      if (window.confirm("Are you sure you want to delete this cook?")) {
+        try {
+          const res = await fetch(`${API_URL}/api/posts/${post._id}`, { method: "DELETE" });
+          if (res.ok) window.location.reload();
+        } catch (err) { console.error("Delete failed:", err); }
+      }
+    };
 
-const [showMoveMenu, setShowMoveMenu] = useState(false);
-const [currentCategory, setCurrentCategory] = useState(post.cookbookCategory || "none");
+    // --- EDITED COMMENT LOGIC ---
+    const handleCommentSubmit = async (e) => {
+        e.preventDefault();
+        if (!commentText.trim()) return;
 
-const handleMoveCategory = async (newCategory) => {
-  try {
-    const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ category: newCategory })
-    });
+        try {
+            const res = await fetch(`${API_URL}/api/posts/${post._id}/comments`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    text: commentText, 
+                    username: currentUser?.username || "Guest",
+                    userAvatar: currentUser?.avatar || currentUser?.profilePic // Send avatar to DB
+                }),
+            });
 
-    if (res.ok) {
-      const updated = await res.json();
-      setCurrentCategory(updated.cookbookCategory);
-      setShowMoveMenu(false); // Close the menu after picking
-    }
-  } catch (err) {
-    console.error("Failed to move post:", err);
-  }
-};
+            const updatedPost = await res.json();
+            if (updatedPost && updatedPost.comments) {
+                setComments(updatedPost.comments); 
+                setCommentText(""); 
+            }
+        } catch (err) {
+            console.error("Error:", err);
+        }
+    };
 
-    //get recipe name
-const getDomainName = (url) => {
-  // If url is null, undefined, or an empty string, don't even try to parse it
-  if (!url) return "Recipe Source"; 
+    // ... (Keep handleMoveCategory, getDomainName, Carousel logic, renderStars exactly as they were) ...
+    const [showMoveMenu, setShowMoveMenu] = useState(false);
+    const [currentCategory, setCurrentCategory] = useState(post.cookbookCategory || "none");
+    const handleMoveCategory = async (newCategory) => {
+        try {
+          const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ category: newCategory })
+          });
+          if (res.ok) {
+            const updated = await res.json();
+            setCurrentCategory(updated.cookbookCategory);
+            setShowMoveMenu(false);
+          }
+        } catch (err) { console.error("Failed to move post:", err); }
+    };
 
-  try {
-    const domain = new URL(url).hostname;
-    return domain.replace('www.', ''); 
-  } catch {
-    return "Recipe Source";
-  }
-};
-// [NEW] State and Ref for Carousel tracking
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const scrollRef = useRef(null);
+    const getDomainName = (url) => {
+        if (!url) return "Recipe Source"; 
+        try { return new URL(url).hostname.replace('www.', ''); } catch { return "Recipe Source"; }
+    };
 
-  // [NEW] Logic to update index during manual swipe
-  const handleScroll = () => {
-    if (scrollRef.current) {
-      const width = scrollRef.current.offsetWidth;
-      const newIndex = Math.round(scrollRef.current.scrollLeft / width);
-      setCurrentIndex(newIndex);
-    }
-  };
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const scrollRef = useRef(null);
+    const handleScroll = () => {
+        if (scrollRef.current) {
+            const width = scrollRef.current.offsetWidth;
+            const newIndex = Math.round(scrollRef.current.scrollLeft / width);
+            setCurrentIndex(newIndex);
+        }
+    };
+    const scroll = (direction) => {
+        if (scrollRef.current) {
+            const width = scrollRef.current.offsetWidth;
+            const scrollAmount = direction === "left" ? scrollRef.current.scrollLeft - width : scrollRef.current.scrollLeft + width;
+            scrollRef.current.scrollTo({ left: scrollAmount, behavior: "smooth" });
+        }
+    };
+    const renderStars = (rating) => {
+        return [...Array(5)].map((_, i) => (
+            <LuStar key={i} size={14} fill={i < rating ? "#f1c40f" : "none"} stroke={i < rating ? "#f1c40f" : "#ccc"} />
+        ));
+    };
 
-  // [NEW] Logic for Arrow Buttons
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const width = scrollRef.current.offsetWidth;
-      const scrollAmount = direction === "left" 
-        ? scrollRef.current.scrollLeft - width 
-        : scrollRef.current.scrollLeft + width;
-      
-      scrollRef.current.scrollTo({
-        left: scrollAmount,
-        behavior: "smooth",
-      });
-    }
-  };
-    // Helper to render stars based on rating (e.g., 4)
-  const renderStars = (rating) => {
-    return [...Array(5)].map((_, i) => (
-      <LuStar 
-        key={i} 
-        size={14} 
-        fill={i < rating ? "#f1c40f" : "none"} 
-        stroke={i < rating ? "#f1c40f" : "#ccc"} 
-      />
-    ));
-  };
-    const [yummed, setYummed] = useState(false);
-  const [count, setCount] = useState(post.kudosCount);
+    const [yummed, setYummed] = useState(post.kudos?.includes(currentUserId) || false);
+    const [count, setCount] = useState(post.kudosCount || 0);
+    const handleYum = async () => {
+        if (!currentUserId) return alert("Please log in!");
+        try {
+            const response = await fetch(`${API_URL}/api/posts/${post._id}/yum`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: currentUserId }),
+            });
+            if (response.ok) {
+                const updatedPost = await response.json();
+                setCount(updatedPost.kudosCount);
+                setYummed(updatedPost.kudos?.includes(currentUserId));
+            }
+        } catch (err) { console.error("Error yumming:", err); }
+    };
 
- const handleYum = async () => {
-  try {
-    // 1. Tell the server to increment the count in DB
-    const response = await fetch(`${API_URL}/api/posts/${post._id}/yum`, {
-      method: "PATCH",
-    });
+    if (!post) return null;
 
-    if (response.ok) {
-      const updatedPost = await response.json();
-      
-      // 2. Update local UI state with the new count from the server
-      setCount(updatedPost.kudosCount);
-      setYummed(true);
-    }
-  } catch (err) {
-    console.error("Error yumming:", err);
-  }
-};
-
-  if (!post) return null;
-
-
-  return (
-    <div className="recipe-card">
-        {/* Delete Button (Absolute positioned in top-right) */}
-    <button className="delete-post-btn" onClick={handleDelete}>
-      <LuTrash2 size={18} />
-    </button>
-      {/* 1. Header: User Info */}
-      <div className="card-header">
-             {post.user ? (
-          <Link to={`/profile/${post.user}`}>
-            <img src={post.userAvatar} alt={post.username} className="avatar" />
-          </Link>
-        ) : (
-          <img src={post.userAvatar} alt={post.username} className="avatar" />
-        )}
-        <div className="user-meta">
-          {post.user ? (
-            <Link
-              to={`/profile/${post.user}`}
-              className="username"
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              {post.username}
-            </Link>
-          ) : (
-            <span className="username">{post.username}</span>
-          )}
-
-          <span className="timestamp">
-            {post.timeAgo} • {post.location}
-          </span>
-        </div>
-      </div>
-
-      {/* 2. Content: The "Cook" */}
-      <div className="card-content">
-        <h2 className="recipe-title">{post.recipeName}</h2>
-        <p className="recipe-description">{post.description}</p>
-      {currentCategory !== "none" && (
-      <div className="category-indicator-badge">
-        📂 Filed in: <strong>{currentCategory}</strong>
-      </div>
-    )}
-
-{/* NEW: Source Link Section */}
-        {post.sourceUrl && (
-     <div className="source-metadata">
-    <a href={post.sourceUrl} target="_blank" rel="noopener noreferrer" className="recipe-source-link">
-      <LuExternalLink size={14} /> View Original Recipe
-    </a>
-    <span className="source-divider"> | </span>
-    <span className="source-site">{<span className="source-site">{getDomainName(post.sourceUrl)}</span> || "Unknown Source"}</span>
-    <span className="source-divider"> | </span>
-    <span className="source-recipe-name">{post.originalRecipeName || post.recipeName}</span>
-  </div>
-        )}
-      </div>
-<div className="image-container">
-        {/* [NEW] Navigation Arrows (Only show if multiple images) */}
-        {post.dishImages?.length > 1 && (
-          <>
-            {currentIndex > 0 && (
-              <button className="nav-arrow left" onClick={() => scroll("left")}>
-                <LuChevronLeft size={36}style={{ display: 'block' }} />
-              </button>
-            )}
-            {currentIndex < post.dishImages.length - 1 && (
-              <button className="nav-arrow right" onClick={() => scroll("right")}>
-                <LuChevronRight size={36}style={{ display: 'block' }} />
-              </button>
-            )}
+    return (
+        <div className="recipe-card">
+            <button className="delete-post-btn" onClick={handleDelete}><LuTrash2 size={18} /></button>
             
-            {/* [NEW] Image Counter Pill */}
-            <div className="image-counter-pill">
-              {currentIndex + 1} / {post.dishImages.length}
+            <div className="card-header">
+                <Link to={`/profile/${post.user}`}><img src={post.userAvatar} alt={post.username} className="avatar" /></Link>
+                <div className="user-meta">
+                    <Link to={`/profile/${post.user}`} className="username" style={{ textDecoration: "none", color: "inherit" }}>{post.username}</Link>
+                    <span className="timestamp">
+                        {post.createdAt ? new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Just now"}
+                        {post.location && ` • ${post.location}`}
+                    </span>
+                </div>
             </div>
-          </>
-        )}
 
-        {/* [NEW] Image Scroller with Ref and Scroll Listener */}
-        <div 
-          className="image-scroller" 
-          ref={scrollRef} 
-          onScroll={handleScroll}
-        >
-          {post.dishImages?.map((img, index) => (
-            <div className="image-slide" key={index}>
-              <img src={img} alt="Dish" className="dish-img" />
+            <div className="card-content">
+                <h2 className="recipe-title">{post.recipeName}</h2>
+                <p className="recipe-description">{post.description}</p>
+                {currentCategory !== "none" && <div className="category-indicator-badge">📂 Filed in: <strong>{currentCategory}</strong></div>}
+                {post.sourceUrl && (
+                    <div className="source-metadata">
+                        <a href={post.sourceUrl} target="_blank" rel="noopener noreferrer" className="recipe-source-link"><LuExternalLink size={14} /> View Original Recipe</a>
+                        <span className="source-divider"> | </span>
+                        <span className="source-site">{getDomainName(post.sourceUrl)}</span>
+                        <span className="source-divider"> | </span>
+                        <span className="source-recipe-name">{post.originalRecipeName || post.recipeName}</span>
+                    </div>
+                )}
             </div>
-          ))}
+
+            <div className="image-container">
+                {post.dishImages?.length > 1 && (
+                    <>
+                        {currentIndex > 0 && <button className="nav-arrow left" onClick={() => scroll("left")}><LuChevronLeft size={36} /></button>}
+                        {currentIndex < post.dishImages.length - 1 && <button className="nav-arrow right" onClick={() => scroll("right")}><LuChevronRight size={36} /></button>}
+                        <div className="image-counter-pill">{currentIndex + 1} / {post.dishImages.length}</div>
+                    </>
+                )}
+                <div className="image-scroller" ref={scrollRef} onScroll={handleScroll}>
+                    {post.dishImages?.map((img, index) => (
+                        <div className="image-slide" key={index}><img src={img} alt="Dish" className="dish-img" /></div>
+                    ))}
+                </div>
+                <div className="tags-overlay">{post.tags?.map((tag, i) => <span key={i} className="tag-pill">{tag}</span>)}</div>
+                <div className="stats-overlay">
+                    <div className="stat"><LuClock /> <span>{post.cookTime}m</span></div>
+                    <div className="stat"><LuFlame /> <span>{post.difficulty}</span></div>
+                    <div className="stat rating">{renderStars(post.rating)}</div>
+                </div>
+            </div>
+
+            <div className="card-footer">
+                <div className="action-buttons">
+                    <button className={`action-btn yum-container ${yummed ? "active" : ""}`} onClick={handleYum}>
+                        <span className="yum-tooltip">{yummed ? "Yummed!" : "Yum!"}</span>
+                        <FaBowlFood className="yum-icon" />
+                        <span className="yum-count">{count}</span>
+                    </button>
+                    {/* UPDATED: Comment Button opens Modal */}
+                    <button className="action-btn" onClick={toggleModal}>
+                        <LuMessageCircle /> <span>{comments.length}</span>
+                    </button>
+                    <button className="post-btn share-btn" onClick={handleShare}>Share</button>
+                </div>
+            </div>
+
+            {/* --- EDITED FEED CARD COMMENT DISPLAY (Shows latest comment with avatar) --- */}
+            <div className="comment-preview-area">
+                {comments?.length > 0 && (
+                    <div className="comment-line-with-avatar" onClick={toggleModal}>
+                        <img src={comments[comments.length - 1].userAvatar || "https://via.placeholder.com/30"} alt="user" className="mini-comment-avatar" />
+                        <span className="comment-user">{comments[comments.length - 1].username}</span>
+                        <span className="comment-text">{comments[comments.length - 1].text}</span>
+                    </div>
+                )}
+                {comments?.length > 1 && (
+                    <button className="view-more-btn" onClick={toggleModal}>
+                        View all {comments.length} comments
+                    </button>
+                )}
+            </div>
+
+            {/* --- NEW: FROSTED COMMENT MODAL --- */}
+            {showCommentModal && (
+                <div className="modal-overlay frosted" onClick={toggleModal}>
+                    <div className="comment-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Comments</h3>
+                            <button className="close-modal-x" onClick={toggleModal}>✕</button>
+                        </div>
+
+                        <div className="modal-comments-list">
+                            {comments.map((c, i) => (
+                                <div key={i} className="modal-comment-row">
+                                    <img src={c.userAvatar || "https://via.placeholder.com/40"} alt={c.username} className="comment-avatar" />
+                                    <div className="comment-content">
+                                        <span className="comment-user">{c.username}</span>
+                                        <p className="comment-text">{c.text}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <form className="modal-comment-form" onSubmit={handleCommentSubmit}>
+                            <input 
+                                placeholder="Add a comment..." 
+                                value={commentText}
+                                onChange={(e) => setCommentText(e.target.value)}
+                                autoFocus
+                            />
+                            <button type="submit"><LuSend size={20} /></button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ... (Keep Move Menu Logic exactly as it was) ... */}
+            <div className="move-wrapper">
+                <button className="move-trigger-btn" onClick={() => setShowMoveMenu(!showMoveMenu)}>🔖</button>
+                {showMoveMenu && (
+                    <div className="move-dropdown-menu">
+                        <header>Organize to...</header>
+                        <button onClick={() => handleMoveCategory("none")}>🌍 General Feed</button>
+                        {myCookbooks?.map(book => (
+                            <button key={book.id} className={currentCategory === book.category ? "active-cat" : ""} onClick={() => handleMoveCategory(book.category)}>
+                                {book.icon} {book.title}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
-
-        {/* [NEW] Dot Indicators */}
-        {post.dishImages?.length > 1 && (
-          <div className="image-dots">
-            {post.dishImages.map((_, i) => (
-              <div 
-                key={i} 
-                className={`dot ${i === currentIndex ? "active" : ""}`}
-                onClick={() => {
-                  const width = scrollRef.current.offsetWidth;
-                  scrollRef.current.scrollTo({ left: width * i, behavior: "smooth" });
-                }}
-              ></div>
-            ))}
-          </div>
-        )}
-
-  {/* Layer 2: The Overlays (Siblings to the scroller, not inside it) */}
-  <div className="tags-overlay">
-    {post.tags.map((tag, i) => (
-      <span key={i} className="tag-pill">{tag}</span>
-    ))}
-  </div>
-
-  <div className="stats-overlay">
-    <div className="stat"><LuClock /> <span>{post.cookTime}m</span></div>
-    <div className="stat"><LuFlame /> <span>{post.difficulty}</span></div>
-    <div className="stat rating">{renderStars(post.rating)}</div>
-  </div>
-  
-  {/* Optional: Image dots/counter */}
-  <div className="image-dots">
-    {post.dishImages.length > 1 && post.dishImages.map((_, i) => (
-      <div key={i} className="dot"></div>
-    ))}
-  </div>
-</div>
-
-      {/* 4. Strava-style "Kudos" & Comments */}
-      <div className="card-footer">
-        <div className="action-buttons">
-          {/* THE YUM BUTTON */}
-          <button 
-            className={`action-btn yum-container ${yummed ? "active" : ""}`}
-            onClick={handleYum}
-          >
-            <span className="yum-tooltip">{yummed ? "Yummed!" : "Yum!"}</span>
-            
-            <FaBowlFood className="yum-icon" />
-            <span className = "yum-count">{count}</span>
-          </button>
-          <button className="action-btn">
-            <LuMessageCircle /> <span>{post.commentCount}</span>
-          </button>
-          <button className="action-btn">
-            <LuShare2 />
-          </button>
-          
-          
-        </div>
-      </div>
-      {/* COMMENT THREAD */}
-    <div className="comment-section">
-     <div className="comments-display">
-  {/* 1. Safe Check for the 'View All' button */}
-  {comments?.length > 1 && !showAll && (
-    <button className="view-more-btn" onClick={() => setShowAll(true)}>
-      View all {comments.length} comments
-    </button>
-  )}
-
-  {/* 2. Safe Mapping of comments */}
-  {/* We add ?. after 'comments' and after 'slice' to prevent the crash */}
-  {(showAll ? comments : comments?.slice(-1))?.map((c, i) => (
-    <div key={i} className="comment-line">
-      <span className="comment-user">{c.username || "Guest"}</span>
-      <span className="comment-text">{c.text}</span>
-    </div>
-  ))}
-  
-  {/* 3. Show a placeholder if there are no comments yet (Optional but nice) */}
-  {comments?.length === 0 && (
-    <p className="no-comments-text">No comments yet. Be the first!</p>
-  )}
-</div>
-      <form className="comment-form" onSubmit={handleCommentSubmit}>
-        <input 
-          placeholder="Add a comment..." 
-          value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
-        />
-        <button type="submit"><LuSend size={16} /></button>
-      </form>
-    </div>
-    {/* 3. NEW MOVE BUTTON & MENU */}
-      <div className="move-wrapper">
-        <button 
-          className="move-trigger-btn" 
-          onClick={() => setShowMoveMenu(!showMoveMenu)}
-          title="Move to Cookbook"
-        >
-          🔖
-        </button>
-
-        {showMoveMenu && (
-          <div className="move-dropdown-menu">
-            <header>Organize to...</header>
-           <button onClick={() => handleMoveCategory("none")}>🌍 General Feed</button>
-    
-    {myCookbooks.map(book => (
-      <button 
-        key={book.id}
-        className={currentCategory === book.category ? "active-cat" : ""} 
-        onClick={() => handleMoveCategory(book.category)}
-      >
-        {book.icon} {book.title}
-      </button>
-    ))}
-          </div>
-        )}
-      </div>
-  </div>
-  );
+    );
 }

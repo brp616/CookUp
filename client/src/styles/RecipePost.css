@@ -1,3 +1,12 @@
+/* --- VARIABLES & BASE --- */
+:root {
+  --forest-green: #2d3436;
+  --sage-green: #2ecc71;
+  --deep-walnut: #3d3d3d;
+  --white: #ffffff;
+  --shadow-soft: 0 4px 20px rgba(0,0,0,0.05);
+}
+
 .recipe-card {
   background: var(--white);
   border-radius: 16px;
@@ -6,8 +15,10 @@
   margin: 20px auto;
   overflow: hidden;
   border: 1px solid #eee;
+  position: relative;
 }
 
+/* --- HEADER --- */
 .card-header {
   padding: 16px;
   display: flex;
@@ -23,10 +34,15 @@
   border: 2px solid var(--sage-green);
 }
 
+.user-meta {
+  display: flex;
+  flex-direction: column;
+}
+
 .username {
-  display: block;
   font-weight: 700;
   color: var(--forest-green);
+  text-decoration: none;
 }
 
 .timestamp {
@@ -34,6 +50,7 @@
   color: #666;
 }
 
+/* --- CONTENT --- */
 .card-content {
   padding: 0 16px 12px;
 }
@@ -44,74 +61,47 @@
   color: #333;
 }
 
-.image-container {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 3;
+.recipe-description {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.4;
 }
 
-.image-scroller {
+.category-indicator-badge {
+  font-size: 0.75rem;
+  color: #666;
+  background: #f0f0f0;
+  padding: 4px 10px;
+  margin-top: 8px;
+  border-radius: 4px;
+  display: inline-block;
+  border-left: 3px solid var(--sage-green);
+}
+
+.source-metadata {
   display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory; /* This creates the "swipe" feel */
-  scrollbar-width: none; /* Hide scrollbar for clean look */
-}
-
-.image-scroller::-webkit-scrollbar { display: none; }
-
-.image-slide {
-  flex: 0 0 100%; /* Each slide takes full width */
-  scroll-snap-align: center;
-  position: relative;
-}
-
-.image-counter {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.7rem;
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 2000;
-}
-
-.modal-content {
-  background: white;
-  padding: 24px;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 500px;
-}
-
-.preview-row {
-  display: flex;
-  gap: 10px;
+  gap: 8px;
   margin-top: 10px;
+  font-size: 0.8rem;
+  color: #636e72;
+  flex-wrap: wrap;
 }
 
-.preview-row img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
+.recipe-source-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--forest-green);
+  text-decoration: none;
+  font-weight: 700;
 }
 
+/* --- IMAGE SCROLLER & CAROUSEL --- */
 .image-container {
-  position: relative; /* All absolute children (tags/stars) will pin to THIS */
+  position: relative;
   width: 100%;
-  overflow: visible; /* Let tooltips/tags breathe */
+  overflow: visible;
 }
 
 .image-scroller {
@@ -119,8 +109,9 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  border-radius: 8px; /* Round the whole container */
 }
+
+.image-scroller::-webkit-scrollbar { display: none; }
 
 .image-slide {
   flex: 0 0 100%;
@@ -129,36 +120,72 @@
 
 .dish-img {
   width: 100%;
-  aspect-ratio: 4 / 3; /* Keeps the card size consistent regardless of image shape */
+  aspect-ratio: 4 / 3;
   object-fit: cover;
   display: block;
 }
 
-/* Ensure overlays have high Z-index to sit ON TOP of images */
-.tags-overlay, .stats-overlay {
-  z-index: 10;
-  pointer-events: none; /* Allows user to still swipe "through" the labels */
+.nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 100;
+  cursor: pointer;
+  border: none;
 }
 
+.nav-arrow.left { left: 12px; }
+.nav-arrow.right { right: 12px; }
+
+.image-counter-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  z-index: 30;
+}
+
+/* --- OVERLAYS --- */
 .tags-overlay {
   position: absolute;
   top: 12px;
   left: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  z-index: 10;
 }
 
-.stats-overlay {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
+.tag-pill {
+  background: rgba(45, 52, 54, 0.8);
+  backdrop-filter: blur(4px);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
 }
 
-/* The Strava-style stats bar */
 .stats-overlay {
   position: absolute;
   bottom: 12px;
   left: 12px;
   display: flex;
   gap: 8px;
+  z-index: 10;
 }
 
 .stat {
@@ -173,6 +200,7 @@
   color: var(--forest-green);
 }
 
+/* --- FOOTER & ACTIONS --- */
 .card-footer {
   padding: 12px 16px;
   border-top: 1px solid #f0f0f0;
@@ -181,6 +209,7 @@
 .action-buttons {
   display: flex;
   gap: 20px;
+  align-items: center;
 }
 
 .action-btn {
@@ -195,27 +224,18 @@
   transition: color 0.2s;
 }
 
-.action-btn:hover {
-  color: var(--forest-green);
-}
-
-.action-btn.kudos:hover {
-  color: #e74c3c;
-}
-
+/* --- YUM TOOLTIP & POP --- */
 .yum-container {
   position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  z-index: 1000;
 }
 
-/* The Speech Bubble (Tooltip) */
 .yum-tooltip {
   position: absolute;
-  bottom: 150%; /* Position it above the icon */
+  bottom: 150%;
   left: 50%;
   transform: translateX(-50%) translateY(10px);
   background-color: var(--deep-walnut);
@@ -224,322 +244,231 @@
   border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 700;
-  white-space: nowrap;
   opacity: 0;
   pointer-events: none;
   transition: all 0.2s ease-in-out;
   z-index: 1000;
 }
 
-/* The Little Triangle pointer at the bottom of the bubble */
 .yum-tooltip::after {
   content: "";
   position: absolute;
-  top: 100%;
-  left: 50%;
+  top: 100%; left: 50%;
   margin-left: -5px;
   border-width: 5px;
   border-style: solid;
   border-color: var(--deep-walnut) transparent transparent transparent;
 }
 
-/* Hover Effect: Show bubble and move it up */
 .yum-container:hover .yum-tooltip {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
 
-/* Color change for the icon on hover */
-.yum-container:hover .yum-icon {
-  color: var(--forest-green);
-}
-
-/* Color change for the text on hover */
-.yum-container:hover .yum-count {
-  color: var(--forest-green);
-}
-
 .yum-container.active .yum-icon {
-  color: var(--forest-green); /* Stays green after clicking */
-  fill: var(--forest-green);   /* Optional: fills the bowl icon if using a compatible set */
+  animation: pop 0.3s ease-out;
+  color: var(--sage-green);
+  fill: var(--sage-green);
 }
 
-.yum-container.active span {
-  color: var(--forest-green); /* The number also turns green */
-  font-weight: 800;
-}
-
-
-
-.yum-container.yum-count {
-    z-index: 1000;
-}
-
-/* The Animation Definition */
 @keyframes pop {
   0% { transform: scale(1); }
   50% { transform: scale(1.4); }
   100% { transform: scale(1); }
 }
 
-/* Apply animation only when the 'active' class is added */
-.yum-container.active .yum-icon {
-  animation: pop 0.3s ease-out;
+/* --- FEED CARD COMMENT PREVIEW --- */
+.comment-preview-area {
+  padding: 0 16px 16px;
 }
 
-.yum-container:hover .yum-tooltip {
-  opacity: 1;
-  transition-delay: 0.1s; /* Slight delay feels more premium */
-}
-
-/* Tags Overlay (Top Left) */
-.tags-overlay {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  max-width: 80%;
-}
-
-.tag-pill {
-  background: rgba(45, 52, 54, 0.8); /* Darker semi-transparent background */
-  backdrop-filter: blur(4px);
-  color: white;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: lowercase;
-  letter-spacing: 0.5px;
-}
-
-/* Specific Stat Style for Rating */
-.stat.rating {
-  display: flex;
-  gap: 2px;
-  padding: 5px 8px;
-}
-
-/* Make sure stats bar doesn't cover too much */
-.stats-overlay {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-/* Ensure the image doesn't cut off tags */
-.dish-img {
-  width: 100%;
-  height: auto;
-  border-radius: 8px; /* Optional: gives the image itself a slight round inside the card */
-}
-.source-metadata {
+.comment-line-with-avatar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  font-size: 0.8rem;
-  color: #636e72; /* Subtle grey */
-  flex-wrap: wrap; /* Wraps cleanly on mobile */
+  gap: 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  background: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 12px;
+  width: fit-content;
+  max-width: 95%;
 }
 
-.recipe-source-link {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--forest-green);
-  text-decoration: none;
-  font-weight: 700;
-  transition: color 0.2s;
-}
-
-.recipe-source-link:hover {
-  color: var(--sage-green);
-}
-
-.source-divider {
-  color: #dfe6e9; /* Very light pipe divider */
-  font-weight: 300;
-}
-
-.source-site {
-  font-weight: 600;
-  color: #2d3436;
-  letter-spacing: 0.5px;
-  font-size: 0.75rem;
-}
-
-.source-recipe-name {
-    font-weight: 600;
-  color: #2d3436;
-  letter-spacing: 0.5px;
-  font-size: 0.75rem;
-}
-.nav-arrow {
-  /* Step 1: Remove top/transform to avoid conflicts */
-  position: absolute;
-  top: 50%; 
-  transform: none; 
-
-  /* Step 2: Perfect Circle */
-  width: 40px;
-  height: 40px;
+.mini-comment-avatar {
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  
-  /* Step 3: Center the icon inside */
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  
-  /* Step 4: Reset Button Defaults */
-  padding: 0;
-  margin: 0;
+  object-fit: cover;
+  border: 1px solid #ddd;
+}
+
+.comment-preview-area .comment-user {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.comment-preview-area .comment-text {
+  font-size: 0.85rem;
+  color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.view-more-btn {
+  background: none;
   border: none;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  z-index: 100;
+  color: #888;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.nav-arrow.left { left: 12px; }
-.nav-arrow.right { right: 12px; }
-
-/* The "Strange Behavior" Killer */
-.nav-arrow svg {
-  width: 24px;
-  height: 24px;
-  display: block; /* Removes the invisible text-line gap */
-  flex-shrink: 0; /* Prevents icon from collapsing to 0 width */
+/* --- FROSTED COMMENT MODAL --- */
+.modal-overlay.frosted {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
 }
 
-.nav-arrow:hover { background: white; scale: 1.1; }
+.comment-modal-card {
+  background: white;
+  width: 95%;
+  max-width: 480px;
+  height: 80vh;
+  border-radius: 30px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
 
-/* Counter Pill Position Update */
-.image-counter-pill {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: rgba(0,0,0,0.6);
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f1f1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--forest-green);
+}
+
+.close-modal-x {
+  background: #f5f5f5;
+  border: none;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-comments-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #fafafa;
+}
+
+.modal-comment-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.comment-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.comment-content {
+  background: white;
+  padding: 12px 16px;
+  border-radius: 18px;
+  border-top-left-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  max-width: 85%;
+}
+
+.modal-comment-form {
+  padding: 20px 24px;
+  border-top: 1px solid #f1f1f1;
+  display: flex;
+  gap: 12px;
+}
+
+.modal-comment-form input {
+  flex: 1;
+  background: #f8f8f8;
+  border: 1px solid #eee;
+  padding: 12px 20px;
+  border-radius: 25px;
+  outline: none;
+}
+
+.modal-comment-form button {
+  background: var(--sage-green);
   color: white;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  z-index: 30;
+  border: none;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
-/* Delete Button */
-.recipe-card { position: relative; } /* Ensure card is parent for positioning */
-
+/* --- UTILS --- */
 .delete-post-btn {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 15px; right: 15px;
   background: rgba(255, 255, 255, 0.8);
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: block;
-  padding: 8px;
+  width: 36px; height: 36px;
+  color: #ff4757;
   cursor: pointer;
   z-index: 10;
-  color: #ff4757;
   transition: 0.2s;
 }
 
 .delete-post-btn:hover { background: #ff4757; color: white; }
 
-/* Comment Thread */
-.comment-section { padding: 12px 16px; border-top: 1px solid #eee; }
-.comment-line { font-size: 0.9rem; margin-bottom: 5px; }
-.comment-user { font-weight: bold; margin-right: 8px; color: #333; }
-.view-more-btn { 
-  background: none; border: none; color: #888; 
-  font-size: 0.8rem; cursor: pointer; margin-bottom: 8px; 
-}
-.comment-form { display: flex; gap: 10px; margin-top: 10px; }
-.comment-form input { flex: 1; border: none; outline: none; font-size: 0.9rem; }
-.comment-form button { background: none; border: none; color: #2ecc71; cursor: pointer; }
-
-.post-actions {
-  display: flex;
-  gap: 15px;
-  padding: 10px 16px;
-  position: relative; /* Essential for the menu to align to this bar */
-}
-
-.move-wrapper {
-  position: relative;
-}
-
-.move-trigger-btn {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.move-trigger-btn:hover { transform: scale(1.1); }
-
+.move-wrapper { padding: 0 16px 12px; position: relative; }
+.move-trigger-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; }
 .move-dropdown-menu {
   position: absolute;
-  bottom: 40px; /* Pops UP instead of DOWN so it doesn't cover content */
-  left: 0;
+  bottom: 40px; left: 16px;
   background: white;
-  border: 1px solid #ddd;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  width: 160px;
-  z-index: 999;
+  width: 180px;
+  z-index: 1000;
   padding: 8px;
   display: flex;
   flex-direction: column;
-  z-index: 100000000;
 }
 
-.move-dropdown-menu header {
-  font-size: 0.7rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  color: #999;
-  padding: 5px 10px;
-}
-
-.move-dropdown-menu button {
-  background: none;
-  border: none;
-  text-align: left;
-  padding: 8px 10px;
-  font-size: 0.9rem;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.move-dropdown-menu button:hover {
-  background: #f5f5f5;
-  color: #2ecc71;
-}
-
-.category-indicator-badge {
-  font-size: 0.75rem;
-  color: #666;
-  background: #f0f0f0;
-  padding: 4px 10px;
-  margin: 0 16px 10px; /* Aligns with your card's side padding */
-  border-radius: 4px;
-  display: inline-block;
-  border-left: 3px solid #2ecc71; /* A nice green accent */
-}
-
-.active-cat {
-  background-color: #e8f5e9 !important; /* Light green highlight */
-  font-weight: bold;
-  color: #2ecc71;
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
