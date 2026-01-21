@@ -78,7 +78,7 @@ app.use('/api', (req, res) => {
 });
 
 // React Router fallback (ALWAYS last)
-app.get('*', (req, res) => {
+app.get('/:path*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
 });
 
