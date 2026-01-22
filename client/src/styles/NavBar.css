@@ -7,6 +7,8 @@
   justify-content: space-between;
   padding: 0 36px;
   box-shadow: var(--shadow-soft);
+  flex-wrap: nowrap;
+  white-space: nowrap;
   /* making navbar sticky */
   position: sticky;
   top: 0;

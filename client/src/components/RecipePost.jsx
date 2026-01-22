@@ -248,7 +248,7 @@ export default function RecipePost({ post, myCookbooks }) {
                                 onChange={(e) => setCommentText(e.target.value)}
                                 autoFocus
                             />
-                            <button type="submit"><LuSend size={20} /></button>
+                            <button type="submit"><LuSend/></button>
                         </form>
                     </div>
                 </div>

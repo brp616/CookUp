@@ -35,6 +35,14 @@ export default function CreatePost({ isOpen, onClose, myCookbooks = [], user }) 
   // --- CLOUDINARY LOGIC ---
   const handleImageUpload = async (e) => {
   const files = Array.from(e.target.files);
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  const invalidFile = files.find(file => !allowedTypes.includes(file.type));
+
+  if (invalidFile) {
+    alert("Only image files (JPG, PNG, WEBP, GIF) are allowed! Please remove the PDF or other files.");
+    e.target.value = null; // Reset input
+    return;
+  }
   if (images.length + files.length > 3) return alert("Max 3 images!");
   
   setIsUploading(true);
@@ -245,6 +253,14 @@ export default function CreatePost({ isOpen, onClose, myCookbooks = [], user }) 
 
           <div className="image-upload-zone">
             <input type="file" multiple onChange={handleImageUpload} id="file-input" hidden />
+            <input 
+  type="file" 
+  multiple 
+  accept="image/png, image/jpeg, image/webp, image/gif" 
+  onChange={handleImageUpload} 
+  id="file-input" 
+  hidden 
+/>
             <label htmlFor="file-input" className={`upload-btn ${isUploading ? 'disabled' : ''}`}>
               {isUploading ? <LuLoader className="spinner" /> : <LuUpload />} 
               Upload Photos ({images.length}/3)

@@ -438,6 +438,12 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  padding: 12px;
+}
+
+.modal-comment-form svg {
+  transform: translate(-1px, 1px);
+
 }
 
 /* --- UTILS --- */
@@ -452,6 +458,10 @@
   cursor: pointer;
   z-index: 10;
   transition: 0.2s;
+}
+
+.delete-post-btn svg {
+  transform: translateX(-50%);
 }
 
 .delete-post-btn:hover { background: #ff4757; color: white; }
@@ -470,5 +480,6 @@
   display: flex;
   flex-direction: column;
 }
+
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
