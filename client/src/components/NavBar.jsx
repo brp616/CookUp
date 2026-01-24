@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { FiSearch } from "react-icons/fi";
+import SearchBar from "./SearchBar";
 import "../styles/NavBar.css";
 import logo from "../assets/Logo_NavBar.png";
 
@@ -22,30 +22,39 @@ export default function Navbar({ user, onLogout }) {
 
       {/* Center: Navigation */}
       <ul className="navbar-links">
-        <li><NavLink to="/">Feed</NavLink></li>
-        <li><NavLink to="/cookbooks">Cookbooks</NavLink></li>
-        <li><NavLink to="/fresh">What's Fresh</NavLink></li>
+        <li>
+          <NavLink to="/">Feed</NavLink>
+        </li>
+        <li>
+          <NavLink to="/cookbooks">Cookbooks</NavLink>
+        </li>
+        <li>
+          <NavLink to="/fresh">What's Fresh</NavLink>
+        </li>
         <li>
           <NavLink to={user ? `/profile/${user._id}` : "/login"}>
             Profile
           </NavLink>
         </li>
-        <li><NavLink to="/contact">Contact Us</NavLink></li>
+        <li>
+          <NavLink to="/contact">Contact Us</NavLink>
+        </li>
       </ul>
 
       <div className="navbar-right">
         {/* Right: Search */}
-        <div className="search-container">
-          <input
-            type="text"
-            placeholder="Search recipes..."
-            className="search-input"
-          />
-          <FiSearch className="search-icon" />
-        </div>
+        <SearchBar />
 
         {/* --- AUTH SECTION --- */}
-        <div className="auth-buttons" style={{ marginLeft: "15px", display: "flex", alignItems: "center", gap: "10px" }}>
+        <div
+          className="auth-buttons"
+          style={{
+            marginLeft: "15px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
           {user ? (
             <>
               <span className="user-greeting">

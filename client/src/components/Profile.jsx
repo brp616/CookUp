@@ -1,26 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import RecipePost from "../components/RecipePost"; 
+import RecipePost from "../components/RecipePost";
 import "../styles/Profile.css";
 
 // Use environment variable to match App.jsx
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000'; 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
 
 export default function Profile({ currentUser, setUser }) {
   // Matches the path="/profile/:userId" in App.jsx
   const { userId } = useParams();
-  const [profileUser, setProfileUser] = useState(null); 
+  const [profileUser, setProfileUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [followed, setFollowed] = useState(false);
 
   // Edit Mode States
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     bio: "",
-    profilePic: ""
+    profilePic: "",
   });
 
-  const defaultAvatar = "https://png.pngtree.com/png-clipart/20241030/original/pngtree-a-cheerful-cook-emoji-icon-png-image_16560077.png";
+  const defaultAvatar =
+    "https://png.pngtree.com/png-clipart/20241030/original/pngtree-a-cheerful-cook-emoji-icon-png-image_16560077.png";
 
   const isOwnProfile = currentUser?._id === userId;
 
@@ -34,22 +36,25 @@ export default function Profile({ currentUser, setUser }) {
         // 1. Fetch User Data
         const userRes = await fetch(`${API_URL}/api/auth/${userId}`);
         const userData = await userRes.json();
-        
+
         if (userRes.ok) {
           setProfileUser(userData);
-          setEditData({ 
-            bio: userData.bio || "", 
-            profilePic: userData.profilePic || "" 
+          setEditData({
+            bio: userData.bio || "",
+            profilePic: userData.profilePic || "",
           });
         }
 
         // 2. Fetch All Posts and Filter
         const postsRes = await fetch(`${API_URL}/api/posts`);
         const allPosts = await postsRes.json();
-        
+
         if (Array.isArray(allPosts)) {
           const userPosts = allPosts.filter(
-            (p) => p.user === userId || p.user?._id === userId || p.userId === userId
+            (p) =>
+              p.user === userId ||
+              p.user?._id === userId ||
+              p.userId === userId,
           );
           setPosts(userPosts);
         }
@@ -66,17 +71,17 @@ export default function Profile({ currentUser, setUser }) {
   const handleUpload = () => {
     window.cloudinary.openUploadWidget(
       {
-        cloudName: "ddhhjsobx", 
-        uploadPreset: "Cookup_uploads",   
+        cloudName: "ddhhjsobx",
+        uploadPreset: "Cookup_uploads",
         sources: ["local", "url", "camera"],
         multiple: false,
-        theme: "minimal"
+        theme: "minimal",
       },
       (error, result) => {
         if (!error && result && result.event === "success") {
           setEditData({ ...editData, profilePic: result.info.secure_url });
         }
-      }
+      },
     );
   };
 
@@ -86,22 +91,22 @@ export default function Profile({ currentUser, setUser }) {
       const res = await fetch(`${API_URL}/api/auth/update/${userId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          userId: currentUser._id, 
-          ...editData 
+        body: JSON.stringify({
+          userId: currentUser._id,
+          ...editData,
         }),
       });
 
       if (!res.ok) throw new Error("Update failed");
 
       const updatedUser = await res.json();
-      
+
       setProfileUser(updatedUser);
-      
+
       if (setUser) {
-        setUser(updatedUser); 
+        setUser(updatedUser);
       }
-      
+
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setIsEditing(false);
     } catch (err) {
@@ -109,7 +114,51 @@ export default function Profile({ currentUser, setUser }) {
     }
   };
 
-  if (loading) return <div className="profile-loading">Loading Chef's Kitchen...</div>;
+  // Following functionality
+  useEffect(() => {
+    if (profileUser && currentUser) {
+      const isFollowing = profileUser.followers?.includes(currentUser._id);
+      setFollowed(!!isFollowing);
+    }
+  }, [profileUser, currentUser]);
+
+  const handleFollow = async () => {
+    if (!currentUser) return alert("Please login to follow chefs!");
+    const previousState = followed;
+    setFollowed(!followed);
+
+    try {
+      const endpoint = previousState ? "unfollow" : "follow";
+      const res = await fetch(
+        `${API_URL}/api/users/${profileUser._id}/${endpoint}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: currentUser._id }),
+        },
+      );
+
+      if (!res.ok) throw new Error("Action failed");
+
+      setProfileUser((prev) => {
+        const currentFollowers = prev.followers || [];
+        if (previousState) {
+          return {
+            ...prev,
+            followers: currentFollowers.filter((id) => id !== currentUser._id),
+          };
+        } else {
+          return { ...prev, followers: [...currentFollowers, currentUser._id] };
+        }
+      });
+    } catch (err) {
+      console.error("Follow error:", err);
+      setFollowed(previousState);
+    }
+  };
+
+  if (loading)
+    return <div className="profile-loading">Loading Chef's Kitchen...</div>;
   if (!profileUser) return <div className="profile-error">User not found!</div>;
 
   return (
@@ -119,35 +168,76 @@ export default function Profile({ currentUser, setUser }) {
           <img
             src={profileUser.profilePic || defaultAvatar}
             alt={profileUser.username}
-            onError={(e) => { e.target.src = defaultAvatar; }}
+            onError={(e) => {
+              e.target.src = defaultAvatar;
+            }}
           />
         </div>
 
         <div className="profile-info">
           <h1>{profileUser.username}</h1>
 
+          <div className="action-row" style={{ marginBottom: "10px" }}>
+            {!isOwnProfile && (
+              <button
+                onClick={handleFollow}
+                className={`follow-btn ${followed ? "following" : ""}`}
+                style={{
+                  padding: "8px 24px",
+                  borderRadius: "20px",
+                  border: followed ? "1px solid #ccc" : "none",
+                  backgroundColor: followed ? "white" : "#ff642f",
+                  color: followed ? "#333" : "white",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                {followed ? "Following" : "Follow"}
+              </button>
+            )}
+          </div>
+
           {isEditing ? (
             <form className="edit-profile-form" onSubmit={handleUpdate}>
-              <button type="button" className="upload-btn" onClick={handleUpload}>
+              <button
+                type="button"
+                className="upload-btn"
+                onClick={handleUpload}
+              >
                 Change Profile Picture
               </button>
-              
-              {editData.profilePic && <p className="pic-ready-msg">New image selected! ✅</p>}
+
+              {editData.profilePic && (
+                <p className="pic-ready-msg">New image selected! ✅</p>
+              )}
 
               <textarea
                 placeholder="Tell us about your cooking style..."
                 value={editData.bio}
-                onChange={(e) => setEditData({...editData, bio: e.target.value})}
+                onChange={(e) =>
+                  setEditData({ ...editData, bio: e.target.value })
+                }
               />
-              
+
               <div className="edit-buttons">
-                <button type="submit" className="save-btn">Save Changes</button>
-                <button type="button" onClick={() => setIsEditing(false)} className="cancel-btn">Cancel</button>
+                <button type="submit" className="save-btn">
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="cancel-btn"
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           ) : (
             <>
-              <p className="profile-bio">{profileUser.bio || "No bio yet. 🍳"}</p>
+              <p className="profile-bio">
+                {profileUser.bio || "No bio yet. 🍳"}
+              </p>
               {isOwnProfile && (
                 <button className="edit-btn" onClick={() => setIsEditing(true)}>
                   Edit Profile
@@ -157,9 +247,24 @@ export default function Profile({ currentUser, setUser }) {
           )}
 
           <div className="profile-stats">
-            <span><strong>{posts.length}</strong> Cooks</span>
-            <span><strong>12</strong> Followers</span>
-            <span><strong>58</strong> Yums</span>
+            <span>
+              <strong>{posts.length}</strong> Cooks
+            </span>
+            <span>
+              <strong>{profileUser.followers?.length || 0}</strong> Followers
+            </span>
+            <span>
+              <strong>{profileUser.following?.length || 0}</strong> Following
+            </span>
+            <span>
+              <strong>
+                {posts.reduce(
+                  (total, post) => total + (post.kudos?.length || 0),
+                  0,
+                )}
+              </strong>{" "}
+              Yums
+            </span>
           </div>
         </div>
       </div>

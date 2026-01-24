@@ -116,7 +116,7 @@ function App() {
           <Route
             path="/"
             element={
-              <Feed posts={posts} myCookbooks={myCookbooks} user={user} />
+              <Feed type="timeline" myCookbooks={myCookbooks} user={user} />
             }
           />
           <Route

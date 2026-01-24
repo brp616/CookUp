@@ -10,6 +10,7 @@ import authRoutes from "./routes/authRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import cookbookRoutes from "./routes/cookbookRoutes.js";
 import feedRoutes from "./routes/feedRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -60,6 +61,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/cookbooks", cookbookRoutes);
 app.use("/api/feed", feedRoutes);
+app.use("/api/users", userRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
