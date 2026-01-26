@@ -482,49 +482,87 @@
   cursor: pointer;
 }
 
-/* --- UTILS --- */
-.edit-post-btn, .delete-post-btn {
+
+/* --- OWNER ACTIONS (Edit/Delete Buttons) --- */
+.owner-actions {
   position: absolute;
-  top: 15px;
-  background: rgba(255, 255, 255, 0.8);
+  top: 12px;
+  right: 12px;
+  z-index: 100; /* High enough to beat the image scroller */
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.edit-post-btn, 
+.delete-post-btn {
+  background: rgba(255, 255, 255, 0.95);
   border: none;
   border-radius: 50%;
-  width: 36px; height: 36px;
+  width: 38px; 
+  height: 38px;
   cursor: pointer;
-  z-index: 10;
-  transition: 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0; /* Prevents icons from being pushed out */
 }
 
-.delete-post-btn { right: 15px; color: #ff4757; }
-.edit-post-btn { right: 60px; color: var(--deep-walnut); }
-
-.delete-post-btn:hover { background: #ff4757; color: white; }
-.edit-post-btn:hover { background: var(--deep-walnut); color: white; }
-
-.move-wrapper { padding: 0 16px 12px; position: relative; }
-.move-trigger-btn { 
-  background: none; 
-  border: none; 
-  font-size: 0.9rem; 
-  color: var(--forest-green);
-  font-weight: 600;
-  cursor: pointer; 
+/* THE SVG FIX */
+.edit-post-btn svg, 
+.delete-post-btn svg {
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
+  position: relative; /* Allows z-index to work */
+  z-index: 101;
+  
+  /* CRITICAL: Lucide icons use stroke, not color/fill */
+  stroke: currentColor !important; 
+  stroke-width: 2.5px !important; /* 10px was too thick, 2.5px is bold */
+  fill: none !important;
+  
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
-.move-dropdown-menu {
-  position: absolute;
-  bottom: 40px; left: 16px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  width: 180px;
-  z-index: 1000;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
+/* Apply the colors to the buttons so currentColor picks them up */
+.edit-post-btn {
+  color: var(--forest-green) !important;
+}
+
+.delete-post-btn {
+  color: #ff4757 !important;
+}
+
+
+
+/* Hover Effects */
+.edit-post-btn:hover {
+  background: var(--deep-walnut);
+  color: white;
+  transform: scale(1.1);
+}
+
+.delete-post-btn:hover {
+  background: #ff4757;
+  color: white;
+  transform: scale(1.1);
+}
+.delete-post-btn:hover svg {
+  stroke: white !important;
+}
+
+.edit-post-btn:hover svg {
+  stroke: white !important;
+}
+
+/* Fix for if they are overlapping with the image counter */
+.image-counter-pill {
+  top: 12px;
+  right: 105px; /* Shifted left so it doesn't collide with the buttons */
+  z-index: 40;
 }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

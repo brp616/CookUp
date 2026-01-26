@@ -1,11 +1,13 @@
 import React, { useState, useRef } from "react";
-import { LuHeart, LuMessageCircle, LuShare2, LuClock, LuFlame, LuStar, LuExternalLink, LuChevronLeft, LuChevronRight, LuTrash2, LuSend,
-  LuPencil
- } from "react-icons/lu";
+import { 
+  LuHeart, LuMessageCircle, LuShare2, LuClock, LuFlame, LuStar, 
+  LuExternalLink, LuChevronLeft, LuChevronRight, LuTrash2, LuSend,
+  LuPencil 
+} from "react-icons/lu";
 import { FaBowlFood } from "react-icons/fa6";
 import "../styles/RecipePost.css";
 import { Link } from "react-router-dom";
-import CreatePost from "./CreatePost.jsx"; //for allowing user to edit their post
+import CreatePost from "./CreatePost.jsx";
 
 export default function RecipePost({ post, myCookbooks }) {
     // --- AUTH CHECK ---
@@ -21,14 +23,12 @@ export default function RecipePost({ post, myCookbooks }) {
     const [yummed, setYummed] = useState(post.kudos?.includes(currentUserId) || false);
     const [count, setCount] = useState(post.kudosCount || 0);
     const [currentIndex, setCurrentIndex] = useState(0);
-    //new edit to show users who kudo
     const [kudosList, setKudosList] = useState(post.kudosData || (Array.isArray(post.kudos) && typeof post.kudos[0] === 'object' ? post.kudos : []));
-    const [ShowEditModal, SetShowEditModal] = useState(false); //for editing post
+    const [ShowEditModal, SetShowEditModal] = useState(false); 
     
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
     const scrollRef = useRef(null);
 
-    // --- TOGGLE MODAL ---
     const toggleModal = () => {
         setShowCommentModal(!showCommentModal);
         document.body.style.overflow = !showCommentModal ? 'hidden' : 'unset';
@@ -53,7 +53,6 @@ export default function RecipePost({ post, myCookbooks }) {
     const handleDelete = async () => {
       if (window.confirm("Are you sure you want to delete this cook?")) {
         try {
-          // Pass userId in query for a simple delete check on backend
           const res = await fetch(`${API_URL}/api/posts/${post._id}?userId=${currentUserId}`, { method: "DELETE" });
           if (res.ok) window.location.reload();
         } catch (err) { console.error("Delete failed:", err); }
@@ -63,7 +62,6 @@ export default function RecipePost({ post, myCookbooks }) {
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (!commentText.trim()) return;
-
         try {
             const res = await fetch(`${API_URL}/api/posts/${post._id}/comments`, {
                 method: "POST",
@@ -74,29 +72,21 @@ export default function RecipePost({ post, myCookbooks }) {
                     userAvatar: currentUser?.avatar || currentUser?.profilePic 
                 }),
             });
-
             const updatedPost = await res.json();
             if (updatedPost && updatedPost.comments) {
                 setComments(updatedPost.comments); 
                 setCommentText(""); 
             }
-        } catch (err) {
-            console.error("Error:", err);
-        }
+        } catch (err) { console.error("Error:", err); }
     };
 
-    // --- UPDATED MOVE CATEGORY LOGIC ---
     const handleMoveCategory = async (newCategory) => {
         if (!currentUserId) return alert("Please log in to organize recipes!");
-        
         try {
           const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-                category: newCategory,
-                userId: currentUserId // Pass the user ID so the backend knows who is moving it
-            })
+            body: JSON.stringify({ category: newCategory, userId: currentUserId })
           });
           if (res.ok) {
             const updated = await res.json();
@@ -134,30 +124,27 @@ export default function RecipePost({ post, myCookbooks }) {
     };
 
     const handleYum = async () => {
-    if (!currentUserId) return alert("Please log in!");
-    try {
-        const response = await fetch(`${API_URL}/api/posts/${post._id}/yum`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: currentUserId }),
-        });
-        if (response.ok) {
-            const updatedPost = await response.json();
-            setCount(updatedPost.kudosCount);
-            setYummed(updatedPost.kudos?.includes(currentUserId));
-            
-            // KEY FIX: Update the list of users who yummed
-            // Ensure your backend .populates('kudos') before returning
-            setKudosList(updatedPost.kudosData || []); 
-        }
-    } catch (err) { console.error("Error yumming:", err); }
-};
+        if (!currentUserId) return alert("Please log in!");
+        try {
+            const response = await fetch(`${API_URL}/api/posts/${post._id}/yum`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: currentUserId }),
+            });
+            if (response.ok) {
+                const updatedPost = await response.json();
+                setCount(updatedPost.kudosCount);
+                setYummed(updatedPost.kudos?.includes(currentUserId));
+                setKudosList(updatedPost.kudosData || []); 
+            }
+        } catch (err) { console.error("Error yumming:", err); }
+    };
 
     if (!post) return null;
 
     return (
         <div className="recipe-card">
-          {/* --- UPDATED OWNER ACTIONS --- */}
+            {/* --- OWNER ACTIONS (RE-ADDED) --- */}
             {currentUserId === post.user && (
                 <div className="owner-actions">
                     <button className="edit-post-btn" onClick={() => SetShowEditModal(true)}>
@@ -168,11 +155,13 @@ export default function RecipePost({ post, myCookbooks }) {
                     </button>
                 </div>
             )}
+
             <div className="card-header">
-                <Link to={`/profile/${post.user}`}><img src={post.userAvatar || TEST_AVATAR} alt={post.username} className="avatar"
-                /></Link>
+                <Link to={`/profile/${post.user}`}>
+                  <img src={post.userAvatar || TEST_AVATAR} alt={post.username} className="avatar" />
+                </Link>
                 <div className="user-meta">
-                    <Link to={`/profile/${post.user}`} className="username" style={{ textDecoration: "none", color: "inherit" }}>{post.username}</Link>
+                    <Link to={`/profile/${post.user}`} className="username">{post.username}</Link>
                     <span className="timestamp">
                         {post.createdAt ? new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Just now"}
                         {post.location && ` • ${post.location}`}
@@ -186,7 +175,9 @@ export default function RecipePost({ post, myCookbooks }) {
                 {currentCategory !== "none" && <div className="category-indicator-badge">📂 Filed in: <strong>{currentCategory}</strong></div>}
                 {post.sourceUrl && (
                     <div className="source-metadata">
-                        <a href={post.sourceUrl} target="_blank" rel="noopener noreferrer" className="recipe-source-link"><LuExternalLink size={14} /> View Original Recipe</a>
+                        <a href={post.sourceUrl} target="_blank" rel="noopener noreferrer" className="recipe-source-link">
+                          <LuExternalLink size={14} /> View Original Recipe
+                        </a>
                         <span className="source-divider"> | </span>
                         <span className="source-site">{getDomainName(post.sourceUrl)}</span>
                         <span className="source-divider"> | </span>
@@ -244,81 +235,73 @@ export default function RecipePost({ post, myCookbooks }) {
                     </button>
                 )}
             </div>
-{showCommentModal && (
-  <div className="modal-overlay frosted" onClick={toggleModal}>
-    <div className="comment-modal-card" onClick={(e) => e.stopPropagation()}>
-      
-      {/* 1. HEADER */}
-      <div className="modal-header">
-        <div className="header-titles">
-          <h3>Comments</h3>
-          <div className="yum-summary">
-            <FaBowlFood className="yum-icon-small" />
-            <strong>{count} {count === 1 ? "Yum" : "Yums"}</strong>
-          </div>
-        </div>
-        <button className="close-modal-x" onClick={toggleModal}>✕</button>
-      </div>
 
-      {/* 2. SOCIAL PROOF ROW (Avatars + Text Inline) */}
-      {count > 0 && (
-        <div className="yum-avatar-row">
-          <div className="avatar-stack">
-            {kudosList.slice(0, 3).map((yummer, i) => {
-              const isPopulated = typeof yummer === 'object' && yummer !== null;
-              const yummerId = isPopulated ? yummer._id : yummer;
-              const yummerName = isPopulated ? yummer.username : "Chef";
-              const yummerImg = isPopulated ? yummer.profilePic : null;
-              const finalAvatar = yummerImg || `https://ui-avatars.com/api/?name=${yummerName}&background=random`;
-
-              return (
-                <Link key={i} to={`/profile/${yummerId}`}>
-                  <img 
-                    src={finalAvatar} 
-                    className="stacked-yum-avatar" 
-                    alt={yummerName}
-                    title={yummerName}
-                  />
-                </Link>
-              );
-            })}
-          </div>
-
-          <p className="yum-text-line">
-            {count === 1 ? (
-              <span><strong>{kudosList[0]?.username || "A chef"}</strong> yummed this</span>
-            ) : (
-              <span>
-                <strong>{kudosList[0]?.username || "Chef"}</strong> and <strong>{count - 1} others</strong> yummed this
-              </span>
-            )}
-          </p>
-        </div>
-      )}
-
-                        <div className="modal-comments-list">
-                            {comments.map((c, i) => (
-                                <div key={i} className="modal-comment-row">
-                                    <img src={c.userAvatar || "https://via.placeholder.com/40"} alt={c.username} className="comment-avatar" />
-                                    <div className="comment-content">
-                                        <span className="comment-user">{c.username}</span>
-                                        <p className="comment-text">{c.text}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <form className="modal-comment-form" onSubmit={handleCommentSubmit}>
-                            <input 
-                                placeholder="Add a comment..." 
-                                value={commentText}
-                                onChange={(e) => setCommentText(e.target.value)}
-                                autoFocus
-                            />
-                            <button type="submit"><LuSend/></button>
-                        </form>
+            {showCommentModal && (
+              <div className="modal-overlay frosted" onClick={toggleModal}>
+                <div className="comment-modal-card" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header">
+                    <div className="header-titles">
+                      <h3>Comments</h3>
+                      <div className="yum-summary">
+                        <FaBowlFood className="yum-icon-small" />
+                        <strong>{count} {count === 1 ? "Yum" : "Yums"}</strong>
+                      </div>
                     </div>
+                    <button className="close-modal-x" onClick={toggleModal}>✕</button>
+                  </div>
+
+                  {count > 0 && (
+                    <div className="yum-avatar-row">
+                      <div className="avatar-stack">
+                        {kudosList.slice(0, 3).map((yummer, i) => {
+                          const isPopulated = typeof yummer === 'object' && yummer !== null;
+                          const yummerId = isPopulated ? yummer._id : yummer;
+                          const yummerName = isPopulated ? yummer.username : "Chef";
+                          const yummerImg = isPopulated ? yummer.profilePic : null;
+                          const finalAvatar = yummerImg || `https://ui-avatars.com/api/?name=${yummerName}&background=random`;
+
+                          return (
+                            <Link key={i} to={`/profile/${yummerId}`}>
+                              <img src={finalAvatar} className="stacked-yum-avatar" alt={yummerName} title={yummerName} />
+                            </Link>
+                          );
+                        })}
+                      </div>
+                      <p className="yum-text-line">
+                        {count === 1 ? (
+                          <span><strong>{kudosList[0]?.username || "A chef"}</strong> yummed this</span>
+                        ) : (
+                          <span>
+                            <strong>{kudosList[0]?.username || "Chef"}</strong> and <strong>{count - 1} others</strong> yummed this
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="modal-comments-list">
+                      {comments.map((c, i) => (
+                          <div key={i} className="modal-comment-row">
+                              <img src={c.userAvatar || "https://via.placeholder.com/40"} alt={c.username} className="comment-avatar" />
+                              <div className="comment-content">
+                                  <span className="comment-user">{c.username}</span>
+                                  <p className="comment-text">{c.text}</p>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+
+                  <form className="modal-comment-form" onSubmit={handleCommentSubmit}>
+                      <input 
+                          placeholder="Add a comment..." 
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          autoFocus
+                      />
+                      <button type="submit"><LuSend/></button>
+                  </form>
                 </div>
+              </div>
             )}
 
             <div className="move-wrapper">
@@ -327,7 +310,6 @@ export default function RecipePost({ post, myCookbooks }) {
                     <div className="move-dropdown-menu">
                         <header>Organize to...</header>
                         <button onClick={() => handleMoveCategory("none")}>🌍 General Feed</button>
-                        {/* Ensure myCookbooks is mapped safely */}
                         {myCookbooks && myCookbooks.length > 0 ? (
                             myCookbooks.map(book => (
                                 <button key={book._id} className={currentCategory === book.category ? "active-cat" : ""} onClick={() => handleMoveCategory(book.category)}>
@@ -340,6 +322,7 @@ export default function RecipePost({ post, myCookbooks }) {
                     </div>
                 )}
             </div>
+
             {ShowEditModal && (
                 <CreatePost 
                     isOpen={ShowEditModal} 
