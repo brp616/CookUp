@@ -3,7 +3,7 @@ import Feed from "./Feed"; // Reuse your existing Feed UI
 import "../styles/WhatsFresh.css";
 
 // Update this if your Python service runs on a different port/URL
-const REC_SERVICE_URL = import.meta.env.PYTHON_SERVICE_URL || "http://localhost:8000";
+const REC_SERVICE_URL = import.meta.env.VITE_PYTHON_SERVICE_URL || "http://localhost:8000";
 
 const WhatsFresh = ({ user, myCookbooks }) => {
   const [recommendations, setRecommendations] = useState([]);

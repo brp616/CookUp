@@ -33,7 +33,7 @@
   align-items: center;
   transition: color 0.2s ease, border-bottom 0.2s ease;
 }
-
+/*add a little hover effect*/
 .navbar-links a:hover {
   color: var(--sage-green);
 }
@@ -108,7 +108,7 @@ width: auto;
 
 /* push search away from contact us */
 .navbar-right {
-  margin-left: 140px;   /* 👈 pushes search away from Contact Us */
+  margin-left: 140px; 
 }
 
 /* --- Login/Logout Buttons --- */
@@ -129,30 +129,26 @@ width: auto;
   color: white;
 }
 
-/* Logout specific look (Optional: if you want it to look different) */
-button.nav-btn {
-  font-family: inherit;
-  font-size: inherit;
-}
 
-/* Update this section */
+
+
 .navbar-right {
-  display: flex;          /* 👈 Align children horizontally */
-  align-items: center;    /* 👈 Center them vertically */
-  gap: 20px;             /* 👈 Space between Search and Login */
-  margin-left: auto;      /* 👈 Pushes the whole group to the right */
+  display: flex;          
+  align-items: center;    
+  gap: 20px;             
+  margin-left: auto;     
 }
 
-/* Add this to handle the text next to the button */
+/* handles text next to buttonn */
 .auth-buttons {
   display: flex;
   align-items: center;
   gap: 12px;
-  white-space: nowrap;    /* 👈 Prevents "Hello, User" from wrapping */
+  white-space: nowrap;    /* added to prevent wrapping */
 }
 
 .user-greeting {
-  color: var(--white);    /* Use your variable to match the theme */
+  color: var(--white);    
   font-weight: 500;
 }
 
