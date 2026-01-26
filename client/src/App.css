@@ -1,3 +1,5 @@
+/*Some more global CSS for the website*/
+
 #root {
   width: 100%;
   min-height: 100vh;
@@ -35,9 +37,6 @@
   padding: 2em;
 }
 
-.read-the-docs {
-  color: #888;
-}
 
 .add-cook-container {
   position: fixed;
@@ -86,6 +85,5 @@
 }
 
 .add-cook-btn svg {
-  /* This ensures the icon itself is treated as a flexible element */
   display: block; 
 }

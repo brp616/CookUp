@@ -3,7 +3,7 @@ import axios from "axios";
 import Post from "../models/Post.js";
 import User from "../models/user.js";
 
-const pythonUrl = process.env.PYTHON_SERVICE_URL || "http://127.0.0.1:8000";
+const pythonUrl = import.meta.env.PYTHON_SERVICE_URL || "http://127.0.0.1:8000";
 
 const router = express.Router();
 

@@ -1,3 +1,4 @@
+//Whole lotta imports
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/NavBar";
@@ -13,13 +14,13 @@ import Profile from "./components/Profile";
 import WhatsFresh from "./components/WhatsFresh";
 import Contact from "./components/contact";
 
+//Setting an environment variable so I can view locally and deploy. took long enough to figure it out
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
 
 function App() {
-  // 1. State Initialization
+  // get everything set up
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
+  const savedUser = localStorage.getItem("user"); return savedUser ? JSON.parse(savedUser) : null;
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
