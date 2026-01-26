@@ -38,7 +38,7 @@ def serialize_mongo(data):
 # --- 4. CORS ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:10000"],
+    allow_origins=["http://localhost:5173", "http://localhost:10000","https://cookup-1gl6.onrender.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
