@@ -19,7 +19,7 @@
   bottom: 120px;
   border-radius: 24px;
   padding: 24px;
-  /* THE FIX: HEIGHT LIMITS */
+  /* adding height limits so it doesn't get cut off like it did before */
   max-height: calc(100vh - 120px); /* Screen height minus (top margin + bottom gap) */
   display: flex;
   flex-direction: column; /* Stacks header, body, footer */
@@ -47,22 +47,21 @@
   font-size: 1.4rem;
 }
 .close-x {
-  /* Step 1: Force a perfect circle */
+    /*wanted to force a perfect circle and center it*/
   width: 32px;
   height: 32px;
-  min-width: 32px; /* Prevents squashing in flex containers */
+  min-width: 32px; 
   min-height: 32px;
   border-radius: 50%;
   
-  /* Step 2: Perfect centering */
   display: flex;
   align-items: center;
   justify-content: center;
   
-  /* Step 3: Reset default button styles */
+  /*getting styles back to default*/
   background: #f1f2f6;
   border: none;
-  padding: 0; /* Critical: default padding makes circles into ovals */
+  padding: 0;
   cursor: pointer;
   color: #2d3436;
   transition: all 0.2s;
@@ -169,7 +168,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* Form Layout */
 .scrollable-form {
   max-height: 70vh;
   overflow-y: auto;
@@ -182,7 +180,6 @@
   gap: 15px;
 }
 
-/* Star Rating Input */
 .star-rating-input {
   display: flex;
   gap: 8px;
@@ -198,7 +195,6 @@
   transform: scale(1.2);
 }
 
-/* Tag Groups */
 .tags-container {
   background: #f8f9fa;
   padding: 15px;
@@ -241,7 +237,6 @@
   border-color: var(--forest-green);
 }
 
-/* Custom Scrollbar for Form */
 .scrollable-form::-webkit-scrollbar {
   width: 6px;
 }
@@ -278,10 +273,10 @@
 
 .category-select:focus {
   outline: none;
-  border-color: #2ecc71; /* Matches a "success" or "food" green */
+  border-color: #2ecc71; 
 }
 
-/* Optional: Style the options slightly */
+/* last styling piece to add more spacing */
 .category-select option {
   padding: 10px;
 }

@@ -1,8 +1,11 @@
 import React, { useState, useRef } from "react";
-import { LuHeart, LuMessageCircle, LuShare2, LuClock, LuFlame, LuStar, LuExternalLink, LuChevronLeft, LuChevronRight, LuTrash2, LuSend } from "react-icons/lu";
+import { LuHeart, LuMessageCircle, LuShare2, LuClock, LuFlame, LuStar, LuExternalLink, LuChevronLeft, LuChevronRight, LuTrash2, LuSend,
+  LuPencil
+ } from "react-icons/lu";
 import { FaBowlFood } from "react-icons/fa6";
 import "../styles/RecipePost.css";
 import { Link } from "react-router-dom";
+import CreatePost from "./CreatePost.jsx"; //for allowing user to edit their post
 
 export default function RecipePost({ post, myCookbooks }) {
     // --- AUTH CHECK ---
@@ -18,7 +21,9 @@ export default function RecipePost({ post, myCookbooks }) {
     const [yummed, setYummed] = useState(post.kudos?.includes(currentUserId) || false);
     const [count, setCount] = useState(post.kudosCount || 0);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [kudosList, setKudosList] = useState(post.kudosData || []);
+    //new edit to show users who kudo
+    const [kudosList, setKudosList] = useState(post.kudosData || (Array.isArray(post.kudos) && typeof post.kudos[0] === 'object' ? post.kudos : []));
+    const [ShowEditModal, SetShowEditModal] = useState(false); //for editing post
     
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
     const scrollRef = useRef(null);
@@ -152,9 +157,17 @@ export default function RecipePost({ post, myCookbooks }) {
 
     return (
         <div className="recipe-card">
-          {currentUserId === post.user && (
-            <button className="delete-post-btn" onClick={handleDelete}><LuTrash2 size={18} /></button>
-          )}
+          {/* --- UPDATED OWNER ACTIONS --- */}
+            {currentUserId === post.user && (
+                <div className="owner-actions">
+                    <button className="edit-post-btn" onClick={() => SetShowEditModal(true)}>
+                        <LuPencil size={18} />
+                    </button>
+                    <button className="delete-post-btn" onClick={handleDelete}>
+                        <LuTrash2 size={18} />
+                    </button>
+                </div>
+            )}
             <div className="card-header">
                 <Link to={`/profile/${post.user}`}><img src={post.userAvatar || TEST_AVATAR} alt={post.username} className="avatar"
                 /></Link>
@@ -250,24 +263,28 @@ export default function RecipePost({ post, myCookbooks }) {
                         {count > 0 && (
     <div className="yum-avatar-row">
         <div className="avatar-stack">
-            {kudosList.slice(0, 5).map((yummer, i) => {
-                // Determine if we have a full object or just an ID
-                const isObject = typeof yummer === 'object' && yummer !== null;
-                const yummerId = isObject ? yummer._id : yummer;
-                const yummerName = isObject ? yummer.username : "Chef";
-                const yummerImg = isObject ? (yummer.avatar || yummer.profilePic) : `https://ui-avatars.com/api/?name=Chef&background=random`;
+           {kudosList.slice(0, 5).map((yummer, i) => {
+    const isPopulated = typeof yummer === 'object' && yummer !== null;
+    
+    const yummerId = isPopulated ? yummer._id : yummer;
+    const yummerName = isPopulated ? yummer.username : "Chef";
+    
+    // UPDATED: Look for profilePic as defined in your User.js
+    const yummerImg = isPopulated ? yummer.profilePic : null;
+    
+    const finalAvatar = yummerImg || `https://ui-avatars.com/api/?name=${yummerName}&background=random`;
 
-                return (
-                    <Link key={i} to={`/profile/${yummerId}`}>
-                        <img 
-                            src={yummerImg} 
-                            className="stacked-yum-avatar" 
-                            alt={yummerName}
-                            title={yummerName}
-                        />
-                    </Link>
-                );
-            })}
+    return (
+        <Link key={i} to={`/profile/${yummerId}`}>
+            <img 
+                src={finalAvatar} 
+                className="stacked-yum-avatar" 
+                alt={yummerName}
+                title={yummerName}
+            />
+        </Link>
+    );
+})}
         </div>
         {count > 5 && <span className="yum-more-count">+{count - 5} more {count - 5 === 1 ? "chef" : "chefs"}</span>}
     </div>
@@ -299,7 +316,7 @@ export default function RecipePost({ post, myCookbooks }) {
             )}
 
             <div className="move-wrapper">
-                <button className="move-trigger-btn" onClick={() => setShowMoveMenu(!showMoveMenu)}>🔖</button>
+                <button className="move-trigger-btn" onClick={() => setShowMoveMenu(!showMoveMenu)}>🔖Add/Move to Cookbook</button>
                 {showMoveMenu && (
                     <div className="move-dropdown-menu">
                         <header>Organize to...</header>
@@ -317,6 +334,15 @@ export default function RecipePost({ post, myCookbooks }) {
                     </div>
                 )}
             </div>
+            {ShowEditModal && (
+                <CreatePost 
+                    isOpen={ShowEditModal} 
+                    onClose={() => SetShowEditModal(false)} 
+                    user={currentUser}
+                    myCookbooks={myCookbooks}
+                    editingPost={post}
+                />
+            )}
         </div>
     );
 }

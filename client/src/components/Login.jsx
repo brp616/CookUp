@@ -4,7 +4,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
 import "../styles/Auth.css";
 
-// Ensure this matches your backend URL
+// set to match in backend and on Render
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 
 
@@ -13,7 +13,7 @@ export default function Login({ setUser }) {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // --- STANDARD LOGIN HANDLER ---
+  // standard login handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -37,7 +37,7 @@ export default function Login({ setUser }) {
     }
   };
 
-  // --- GOOGLE LOGIN HANDLER ---
+  // handler for the googs
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       const decoded = jwtDecode(credentialResponse.credential);

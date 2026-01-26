@@ -3,18 +3,18 @@ import { useParams } from "react-router-dom";
 import RecipePost from "../components/RecipePost";
 import "../styles/Profile.css";
 
-// Use environment variable to match App.jsx
+// Use environment variable to match App.jsx and deploy on render
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
 
 export default function Profile({ currentUser, setUser }) {
   // Matches the path="/profile/:userId" in App.jsx
   const { userId } = useParams();
-  const [profileUser, setProfileUser] = useState(null);
+  const [profileUser, setprofileuser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [followed, setFollowed] = useState(false);
 
-  // Edit Mode States
+  // editing variables
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     bio: "",
@@ -28,45 +28,37 @@ export default function Profile({ currentUser, setUser }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Safety check: if there's no userId in URL, don't attempt fetch
       if (!userId) return;
-
       try {
         setLoading(true);
-        // 1. Fetch User Data
+        // get new data
         const userRes = await fetch(`${API_URL}/api/auth/${userId}`);
         const userData = await userRes.json();
 
         if (userRes.ok) {
-          setProfileUser(userData);
+          setprofileuser(userData);
           setEditData({
             bio: userData.bio || "",
             profilePic: userData.profilePic || "",
-          });
-        }
+          });}
 
-        // 2. Fetch All Posts and Filter
+        // get their posts and filter
         const postsRes = await fetch(`${API_URL}/api/posts`);
         const allPosts = await postsRes.json();
 
         if (Array.isArray(allPosts)) {
           const userPosts = allPosts.filter(
             (p) =>
-              p.user === userId ||
-              p.user?._id === userId ||
-              p.userId === userId,
+              p.user === userId || p.user?._id === userId ||p.userId === userId,
           );
           setPosts(userPosts);
         }
       } catch (err) {
         console.error("Error fetching profile:", err);
-      } finally {
-        setLoading(false);
-      }
+      } finally {setLoading(false);}
     };
-
-    fetchData();
-  }, [userId]); // Only runs when URL userId changes
+fetchData();
+  }, [userId]); // this ensures we only run when URL userId changes
 
   const handleUpload = () => {
     window.cloudinary.openUploadWidget(
@@ -85,7 +77,7 @@ export default function Profile({ currentUser, setUser }) {
     );
   };
 
-  const handleUpdate = async (e) => {
+  const handleupdate = async (e) => {
     e.preventDefault();
     try {
       const res = await fetch(`${API_URL}/api/auth/update/${userId}`, {
@@ -96,33 +88,24 @@ export default function Profile({ currentUser, setUser }) {
           ...editData,
         }),
       });
-
       if (!res.ok) throw new Error("Update failed");
-
       const updatedUser = await res.json();
-
-      setProfileUser(updatedUser);
-
+      setprofileuser(updatedUser);
       if (setUser) {
         setUser(updatedUser);
       }
-
       localStorage.setItem("user", JSON.stringify(updatedUser));
       setIsEditing(false);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+    } catch (err) {alert(err.message);}};
 
-  // Following functionality
+  // later addition: Following functionality
   useEffect(() => {
     if (profileUser && currentUser) {
       const isFollowing = profileUser.followers?.includes(currentUser._id);
       setFollowed(!!isFollowing);
-    }
-  }, [profileUser, currentUser]);
+    } }, [profileUser, currentUser]);
 
-  const handleFollow = async () => {
+  const followfunc = async () => {
     if (!currentUser) return alert("Please login to follow chefs!");
     const previousState = followed;
     setFollowed(!followed);
@@ -132,15 +115,13 @@ export default function Profile({ currentUser, setUser }) {
       const res = await fetch(
         `${API_URL}/api/users/${profileUser._id}/${endpoint}`,
         {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          method: "PUT", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: currentUser._id }),
-        },
-      );
+        },);
 
-      if (!res.ok) throw new Error("Action failed");
+      if (!res.ok) throw new Error("Follow failed");
 
-      setProfileUser((prev) => {
+      setprofileuser((prev) => {
         const currentFollowers = prev.followers || [];
         if (previousState) {
           return {
@@ -180,17 +161,11 @@ export default function Profile({ currentUser, setUser }) {
           <div className="action-row" style={{ marginBottom: "10px" }}>
             {!isOwnProfile && (
               <button
-                onClick={handleFollow}
+                onClick={followfunc}
                 className={`follow-btn ${followed ? "following" : ""}`}
                 style={{
-                  padding: "8px 24px",
-                  borderRadius: "20px",
-                  border: followed ? "1px solid #ccc" : "none",
+                  border: followed ? "1px solid #ccc" : "none",                   color: followed ? "#333" : "white",
                   backgroundColor: followed ? "white" : "#ff642f",
-                  color: followed ? "#333" : "white",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
                 }}
               >
                 {followed ? "Following" : "Follow"}
@@ -199,7 +174,7 @@ export default function Profile({ currentUser, setUser }) {
           </div>
 
           {isEditing ? (
-            <form className="edit-profile-form" onSubmit={handleUpdate}>
+            <form className="edit-profile-form" onSubmit={handleupdate}>
               <button
                 type="button"
                 className="upload-btn"
@@ -209,7 +184,7 @@ export default function Profile({ currentUser, setUser }) {
               </button>
 
               {editData.profilePic && (
-                <p className="pic-ready-msg">New image selected! ✅</p>
+                <p className="pic-ready-msg">New image selected!</p>
               )}
 
               <textarea
@@ -247,31 +222,25 @@ export default function Profile({ currentUser, setUser }) {
           )}
 
           <div className="profile-stats">
+            <span><strong>{posts.length}</strong> {posts.length === 1 ? "Cook" : "Cooks"}</span>
             <span>
-              <strong>{posts.length}</strong> {posts.length === 1 ? "Cook" : "Cooks"}
-            </span>
-            <span>
+              {/* edited to handle single vs. multiple language */}
               <strong>{profileUser.followers?.length || 0}</strong> {profileUser.followers?.length === 1 ? "Follower" : "Followers"}
-            </span>
-            <span>
+            </span><span>
               <strong>{profileUser.following?.length || 0}</strong> Following
-            </span>
-            <span>
+            </span><span>
               <strong>
                 {posts.reduce(
-                  (total, post) => total + (post.kudos?.length || 0),
-                  0,
+                  (total, post) => total + (post.kudos?.length || 0),0,
                 )}
               </strong>{" "}
               {posts.reduce(
-                (total, post) => total + (post.kudos?.length || 0),
-                0,
+                (total, post) => total + (post.kudos?.length || 0),0,
               ) === 1 ? "Yum" : "Yums"}
             </span>
           </div>
         </div>
       </div>
-
       <hr className="profile-divider" />
 
       <div className="profile-feed">
@@ -284,8 +253,6 @@ export default function Profile({ currentUser, setUser }) {
               <RecipePost key={post._id} post={post} />
             ))}
           </div>
-        )}
-      </div>
-    </div>
+        )}</div></div>
   );
 }

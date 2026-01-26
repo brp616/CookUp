@@ -28,10 +28,6 @@ async function seedDatabase() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("Connected to MongoDB for seeding...");
 
-    // Clear existing data (Optional - remove if you want to keep your current data)
-    // await User.deleteMany({});
-    // await Post.deleteMany({});
-
     // 1. Create 10 Fake Users
     const users = [];
 for (let i = 0; i < 10; i++) {

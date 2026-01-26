@@ -14,21 +14,24 @@ import Profile from "./components/Profile";
 import WhatsFresh from "./components/WhatsFresh";
 import Contact from "./components/contact";
 
-//Setting an environment variable so I can view locally and deploy. took long enough to figure it out
+//Setting an environment variable so I can view locally and deploy.
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
 
 function App() {
   // get everything set up
   const [user, setUser] = useState(() => {
-  const savedUser = localStorage.getItem("user"); return savedUser ? JSON.parse(savedUser) : null;
+    const savedUser = localStorage.getItem("user"); 
+    return savedUser ? JSON.parse(savedUser) : null;
   });
 
   const [modalinuse, setmodalinuse] = useState(false);
   const [posts, setPosts] = useState([]);
-  //setting default cookbooks so users have a place to put recipes when they start
-  const [myCookbooks, setMyCookbooks] = useState([
+
+  // DERIVED STATE: This calculates individual cookbooks based on user._id 
+  // without using a separate useEffect, satisfying the ESLint rule.
+  const myCookbooks = user ? [
     {
-      _id: "default-1",
+      _id: `default-1-${user._id}`,
       title: "Cooked It",
       subtitle: "Tried & True",
       color: "#f3d2a2",
@@ -36,14 +39,14 @@ function App() {
       category: "cooked",
     },
     {
-      _id: "default-2",
+      _id: `default-2-${user._id}`,
       title: "To Cook",
       subtitle: "Future Feasts",
       color: "#a2d2f3",
       icon: "⏳",
       category: "to-cook",
     },
-  ]);
+  ] : [];
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -51,12 +54,12 @@ function App() {
     window.location.href = "/login";
   };
 
-  
+  // Sync user logic
   useEffect(() => {
     const syncUser = async () => {
       if (user && user._id) {
         try {
-          const cleanId = String(user._id).split(":")[0].trim(); // Removes ":1" if it exists
+          const cleanId = String(user._id).split(":")[0].trim(); 
           const res = await fetch(`${API_URL}/api/auth/${cleanId}`);
 
           if (res.ok) {
@@ -72,27 +75,31 @@ function App() {
     syncUser();
   }, []);
 
-  // fetch our data for posts and cookbook
+  // Fetch posts logic
   useEffect(() => {
-  const fetchPosts = async () => {
-    try {
-      const postRes = await fetch(`${API_URL}/api/posts`);
-      const postData = await postRes.json();
-      setPosts(Array.isArray(postData) ? postData : postData.posts || []);
-    } catch (err) {
-      console.error("Fetch posts failed:", err);
-    }
-  };
-  fetchPosts();
-}, []);
-//actually build out the site
+    const fetchPosts = async () => {
+      try {
+        const postRes = await fetch(`${API_URL}/api/posts`);
+        const postData = await postRes.json();
+        setPosts(Array.isArray(postData) ? postData : postData.posts || []);
+      } catch (err) {
+        console.error("Fetch posts failed:", err);
+      }
+    };
+    fetchPosts();
+  }, []);
+
+  //actually build out the site
   return (
     <div className="app-container">
       {user && (
         <div className="add-cook-container">
-          <button className="add-cook-btn" onClick={() => setmodalinuse(true)}><LuPlus size={32} strokeWidth={3} /></button>
+          <button className="add-cook-btn" onClick={() => setmodalinuse(true)}>
+            <LuPlus size={32} strokeWidth={3} />
+          </button>
         </div>
       )}
+
       <CreatePost
         isOpen={modalinuse}
         onClose={() => setmodalinuse(false)}
@@ -100,7 +107,8 @@ function App() {
         user={user}
         setPosts={setPosts}
       />
-{/* routes galore */}
+
+      {/* routes galore */}
       <BrowserRouter>
         <Navbar user={user} onLogout={handleLogout} />
 
@@ -117,7 +125,7 @@ function App() {
               <Cookbooks
                 allPosts={posts}
                 myCookbooks={myCookbooks}
-                setMyCookbooks={setMyCookbooks}
+                // setMyCookbooks removed here because it's derived from user now
                 user={user}
               />
             }

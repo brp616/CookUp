@@ -159,6 +159,7 @@
   align-items: center;
   justify-content: center;
   color: #aaa;
+  
 }
 
 .create-plus { font-size: 4rem; line-height: 1; }
@@ -174,13 +175,14 @@
   align-items: center;
   justify-content: center;
   z-index: 2000; /* Ensure it stays above everything */
+  
 }
 
 /* 2. The Customizer Card */
 .customizer-modal {
   background: #ffffff;
   width: 90%;
-  max-width: 450px;
+ max-width: 450px;
   padding-left: 30px;
   padding-right: 30px;
   padding-top: 20px;
@@ -189,9 +191,11 @@
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   color: #333;
   animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  HEIGHT: 95%;
+  HEIGHT: 80%;
   font-size: 1rem;
   display: block;
+  transform: translateY(40px);
+
 }
 
 @keyframes modalPop {
@@ -205,31 +209,54 @@
   text-align: center;
   color: #2d1e14;
 }
-
 /* 3. Inputs & Labels */
 .modal-body label {
   display: block;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.85rem; /* Slightly smaller for a modern look */
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
   margin: 20px 0 8px;
-  color: #888;
+  color: #999;
 }
 
-.modal-body input {
+/* Grouping Shared Styles for Title and Description */
+.modal-body input, 
+.modal-body textarea {
   width: 100%;
-  padding: 12px 16px;
-  border: 2px solid #eee;
+  padding: 14px 16px;
+  border: 2px solid #f0f0f0;
   border-radius: 12px;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  font-family: inherit; /* Ensures text matches the rest of the app */
+  transition: all 0.2s ease-in-out;
   box-sizing: border-box;
+  background-color: #fafafa;
+  color: #333;
 }
 
-.modal-body input:focus {
+/* Specific Height for the Description Box */
+.modal-body textarea {
+  min-height: 100px;
+  resize: vertical; /* Allows users to expand height only */
+  line-height: 1.5;
+}
+
+/* Polished Focus State */
+.modal-body input:focus,
+.modal-body textarea:focus {
   outline: none;
   border-color: #a2d2f3;
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(162, 210, 243, 0.2);
+}
+
+/* Stylish Placeholder */
+.modal-body input::placeholder,
+.modal-body textarea::placeholder {
+  color: #bbb;
+  font-style: italic;
+  font-size: 0.95rem;
 }
 
 /* 4. Selection Grids */
@@ -237,6 +264,7 @@
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .color-dot {

@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import RecipePost from "../components/RecipePost"; 
 import "../styles/PostDetail.css";
-// Added LuChevronLeft for the back button to match your other UI icons
+// Added LuChevronLeft for the back button to match other icons
 import { LuChevronLeft } from "react-icons/lu";
-
+//finally we figured out how to deploy
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 
 export default function PostDetail({ user, myCookbooks = [] }) {
@@ -30,7 +30,7 @@ export default function PostDetail({ user, myCookbooks = [] }) {
 
   if (loading) return <div className="loader">Heating up the oven... 🍳</div>;
   if (!post) return <div className="error-container">Post not found</div>;
-
+//now to return the detail page
   return (
     <div className="post-detail-page">
       {/* Styled Back Button matching the website's clean, pill-shaped design */}
@@ -40,9 +40,6 @@ export default function PostDetail({ user, myCookbooks = [] }) {
       </button>
 
       <div className="detail-content-wrapper">
-        {/* Passing 'isDetailView={true}' so that RecipePost knows 
-          to show all comments or adjust its layout for this page.
-        */}
         <RecipePost 
           post={post} 
           user={user} 

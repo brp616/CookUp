@@ -13,36 +13,36 @@ export default function Register({ setUser }) {
     password: "", 
     confirmPassword: "" 
   });
-  
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
-  // --- STANDARD REGISTER HANDLER ---
-  const handleSubmit = async (e) => {
+  // let's register
+  const HandleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+// basic validation before hitting the server
+    if (formData.password.length < 6) {
+      return setError("Password needs to be at least 6 characters.");
+    }
 
     if (formData.password !== formData.confirmPassword) {
       return setError("Passwords do not match!");
     }
-
+//now let's try to register them
     try {
-      const res = await fetch(`${API_URL}/api/auth/register`, {
+      const res = await fetch(`${API_URL}/api/auth/register`, { //replaced localhost with api_url
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             username: formData.username,
             email: formData.email,
             password: formData.password
-        }),
-      });
-
-      const data = await res.json();
+        }),});
+const data = await res.json();
 
       if (!res.ok) {
         throw new Error(data.message || "Registration failed");
       }
-
       localStorage.setItem("user", JSON.stringify(data));
       if (setUser) setUser(data);
       navigate("/"); 
@@ -51,11 +51,11 @@ export default function Register({ setUser }) {
     }
   };
 
-  // --- GOOGLE SIGN-UP HANDLER ---
+  // add-on module for google integration, use jwtDecode to decode info from google
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
+      // pulling user details from JWT
       const decoded = jwtDecode(credentialResponse.credential);
-      
       const res = await fetch(`${API_URL}/api/auth/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -64,8 +64,7 @@ export default function Register({ setUser }) {
           email: decoded.email,
           profilePic: decoded.picture,
           googleId: decoded.sub
-        }),
-      });
+        }),});
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Google registration failed");
@@ -76,8 +75,7 @@ export default function Register({ setUser }) {
     } catch (err) {
       setError("Google Sign-up failed. Please try again.");
       console.error(err);
-    }
-  };
+    }};
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -88,8 +86,7 @@ export default function Register({ setUser }) {
       <div className="auth-box">
         <h2>Join CookUp! 🥗</h2>
         {error && <p className="error-msg" style={{color: 'red'}}>{error}</p>}
-
-        <form onSubmit={handleSubmit}>
+        <form OnSubmit={HandleSubmit}>
           <input
             name="username"
             type="text"
@@ -98,7 +95,6 @@ export default function Register({ setUser }) {
             value={formData.username}
             onChange={handleChange}
           />
-          
           <input
             name="email"
             type="email"
@@ -107,7 +103,6 @@ export default function Register({ setUser }) {
             value={formData.email}
             onChange={handleChange}
           />
-
           <input
             name="password"
             type="password"
@@ -116,7 +111,6 @@ export default function Register({ setUser }) {
             value={formData.password}
             onChange={handleChange}
           />
-
           <input
             name="confirmPassword"
             type="password"
@@ -125,7 +119,6 @@ export default function Register({ setUser }) {
             value={formData.confirmPassword}
             onChange={handleChange}
           />
-
           <button type="submit" className="auth-btn">
             Create Account
           </button>
@@ -133,21 +126,15 @@ export default function Register({ setUser }) {
 
         <div className="auth-divider">
           <span>OR</span>
-        </div>
-
-        <div className="google-login-wrapper">
+        </div><div className="google-login-wrapper">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => setError("Google Sign-up Failed")}
             text="signup_with"
             useOneTap
-          />
-        </div>
-
+          /> </div>
         <p className="auth-footer">
           Already have an account? <Link to="/login">Log In</Link>
         </p>
       </div>
-    </div>
-  );
-}
+    </div>);}

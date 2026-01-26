@@ -19,12 +19,11 @@ const UserSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      // We remove "required: true" to allow Google Users to exist
-      // without a standard password field.
+      // removed 'required' here to allow google users
     },
     profilePic: {
       type: String,
-      default: "", // Stores the Cloudinary URL or Google Image URL
+      default: "", // Stores the Cloudinary google image
     },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
@@ -44,6 +43,6 @@ const UserSchema = new mongoose.Schema(
     },
   },
   { timestamps: true },
-); // Automatically adds 'updatedAt' fields
+);
 
 export default mongoose.model("User", UserSchema);

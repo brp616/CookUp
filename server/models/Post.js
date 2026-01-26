@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import user from "../models/user.js";
 
 const postSchema = new mongoose.Schema(
   {
@@ -8,16 +9,16 @@ const postSchema = new mongoose.Schema(
     recipeName: String,
     description: String,
     recipeLink: String,
-    dishImages: [{ type: String }], // Array of URLs (from Cloudinary or S3),
+    dishImages: [{ type: String }], // Array of URLs (from Cloudinary),
     cookTime: Number,
     difficulty: String,
     rating: { type: Number, default: 5 },
     tags: [String], // Array of strings: ['dinner', 'vegan']
     kudosCount: { type: Number, default: 0 },
-    kudos: { type: [String], default: [] }, // Array of User IDs who clicked Yum
+kudos: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Array of User IDs who clicked Yum
     sourceUrl: String, // e.g., "https://www.seriouseats.com/..."
     sourceName: String, // e.g., "Serious Eats"
-    originalRecipeName: String, // e.g., "The Best Crispy Roast Potatoes"
+    originalRecipeName: String, // e.g., "miso salmon"
     cookbookCategory: {
       type: String,
       default: "none",
@@ -39,6 +40,6 @@ const postSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Ensure this EXACT line is at the bottom
+// exporting it
 const Post = mongoose.model("Post", postSchema);
 export default Post;

@@ -1,75 +1,53 @@
 import React from 'react';
+import '../styles/ContactUs.css'; 
+//info on the team
+const team = [
+  {
+    name: "Ben",
+    role: "Creator + Developer",
+    github: "https://github.com/brp616", 
+    email: "benplot@mit.edu",
+    bio: "Focused on the heavy lifting: core infrastructure, database architecture, and making sure the API actually talks to the frontend."
+  },
+  {
+    name: "Xuan",
+    role: "Creator + Developer",
+    github: "https://github.com/ngxuanyi17",
+    email: "xuanyi17@mit.edu",
+    bio: "The brain behind user experience, search functionality, and our recommendation engine. If the app feels smart, that's Xuan."
+  }
+];
 
 const ContactUs = () => {
-  const team = [
-    {
-      name: "Ben",
-      role: "Creator + Developer",
-      github: "https://https://github.com/brp616", 
-      email: "benplot@mit.edu",
-      tasks: "Core frontend + backend infrastructure, database schema, API integration, design, deployment"
-    },
-    {
-      name: "Xuan",
-      role: "Creator + Developer",
-      github: "https://github.com/ngxuanyi17",
-      email: "xuanyi17@mit.edu",
-      tasks: "User functionalities, search, recommendation engine, testing"
-    }
-  ];
-
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px', fontFamily: 'Arial, sans-serif' }}>
-      <header style={{ textAlign: 'center', marginBottom: '50px' }}>
-        <h1 style={{ fontSize: '2.5rem', color: '#333' }}>Contact the Team</h1>
-        <p style={{ fontSize: '1.1rem', color: '#666', maxWidth: '600px', margin: '10px auto' }}>
-          Hello! We are Ben and Xuan, 2 avid cooks and MBA students at MIT Sloan. This platform was engineered for <strong>WebLab 2026</strong> at MIT.
-          We are both builders passionate about food who wanted to make a platform for unfiltered recipe sharing and discovery between friends.
-        </p>
+    <main className="contact-wrapper">
+      <header className="contact-header">
+        <h1>Meet the Team 🥗</h1>
+        <p>We’re Ben and Xuan, two avid cooks and MBA students at MIT Sloan. 
+          We built <strong>CookUp</strong> for WebLab 2026 because we wanted a 
+          space for friends to share real, unfiltered recipes.</p>
+          <p>See our repository <a href="https://github.com/brp616/CookUp/tree/final_weblab_branch" target="_blank" rel="noreferrer">here</a> to look under the hood at the project. Check our readme for full citations and attributions.</p>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-        {team.map((member) => (
-          <div key={member.name} style={{
-            padding: '30px',
-            border: '1px solid #eaeaea',
-            borderRadius: '12px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-            textAlign: 'center'
-          }}>
-            <h2 style={{ color: '#2c3e50', marginBottom: '5px' }}>{member.name}</h2>
-            <h4 style={{ color: '#e67e22', fontWeight: 'normal', marginBottom: '15px' }}>{member.role}</h4>
-            <p style={{ fontSize: '0.9rem', color: '#7f8c8d', marginBottom: '20px' }}>{member.tasks}</p>
-            
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '15px' }}>
-              <a href={member.github} target="_blank" rel="noopener noreferrer" style={buttonStyle}>
-                GitHub
-              </a>
-              <a href={`mailto:${member.email}`} style={buttonStyle}>
-                Email
-              </a>
+      <section className="team-grid">
+        {team.map(({ name, role, github, email, bio }) => (
+          <div key={name} className="member-card">
+            <h2>{name}</h2>
+            <span className="member-role">{role}</span>
+            <p className="member-bio">{bio}</p>
+            <div className="button-group">
+              <a href={github} target="_blank" rel="noreferrer" className="btn secondary"> GitHub</a>
+              <a href={`mailto:${email}?subject=CookUp Feedback`} className="btn primary">Get in Touch</a>
             </div>
-          </div>
-        ))}
-      </div>
-
-      <footer style={{ marginTop: '60px', textAlign: 'center', borderTop: '1px solid #eee', paddingPadding: '20px' }}>
-        <p style={{ color: '#999', fontSize: '0.85rem' }}>
-          &copy; 2026 Ben Plotnik & Xuan Yi Ng — Built with React, Node.js, FastAPI, and deployed on Render for WebLab.
+          </div>))}
+      </section>
+      <footer className="contact-footer">
+        <p>
+          &copy; 2026 Ben Plotnik & Xuan Yi Ng <br />
+          Built with the React and Node.js + FastAPI on MongoDB. Images hosted by Cloudinary. Deployed on Render.
         </p>
-      </footer>
-    </div>
+      </footer></main>
   );
-};
-
-const buttonStyle = {
-  padding: '8px 16px',
-  borderRadius: '6px',
-  backgroundColor: '#333',
-  color: 'white',
-  textDecoration: 'none',
-  fontSize: '0.9rem',
-  transition: 'background 0.2s'
 };
 
 export default ContactUs;

@@ -39,15 +39,14 @@
 }
 
 .navbar-links a.active {
-  color: var(--white);
-  border-bottom: 2px solid var(--sage-green);
+  color: var(--white); border-bottom: 2px solid var(--sage-green);
 }
 
-/* Search */
 .search-container {
   position: relative;
 }
 
+/* designing a search bar that only appears when hovered on */
 .search-input {
   width: 0;
   opacity: 0;
@@ -76,7 +75,6 @@ width: auto;
   height: auto;
 }
 
-/* logo */
 
 .logo {
   font-size: 1.6rem;
@@ -111,27 +109,19 @@ width: auto;
   margin-left: 140px; 
 }
 
-/* --- Login/Logout Buttons --- */
+/* login and logout buttons */
 .nav-btn {
   padding: 0.5rem 1.2rem;
   border-radius: 8px;
-  text-decoration: none;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 2px solid var(--deep-walnut);
-  background-color: transparent;
-  color: var(--deep-walnut);
+  border: 2px solid var(--deep-walnut);  background-color: transparent; color: var(--deep-walnut);
 }
-
 .nav-btn:hover {
   background-color: var(--deep-walnut);
   color: white;
 }
-
-
-
-
 .navbar-right {
   display: flex;          
   align-items: center;    
@@ -139,22 +129,16 @@ width: auto;
   margin-left: auto;     
 }
 
-/* handles text next to buttonn */
 .auth-buttons {
   display: flex;
   align-items: center;
   gap: 12px;
   white-space: nowrap;    /* added to prevent wrapping */
 }
-
-.user-greeting {
-  color: var(--white);    
-  font-weight: 500;
-}
-
+/* further auth edits*/
 .auth-buttons {
     margin-left: 15px;
     display: flex;
-            align-items: center;
-            gap: 10px,
+    align-items: center;
+    gap: 10px,
 }

@@ -9,27 +9,25 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
 
 export default function Feed({ type, myCookbooks, user }) {
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, toggleLoad] = useState(true);
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search");
 
   useEffect(() => {
-    const fetchFeed = async () => {
-      setLoading(true);
-      try {
-        let res;
+    const GrabFeed = async () => {
+      toggleLoad(true);
+      try {let res;
         if (searchQuery) {
-          // 1. SEARCH MODE
+          // feed we return from searches
           res = await axios.get(`${API_URL}/api/posts/search?q=${searchQuery}`);
         } else if (user && type === "timeline") {
-          // 2. FEED MODE
+          // regular feed
           res = await axios.get(`${API_URL}/api/posts/timeline/${user._id}`);
         } else {
-          // 3. WHATS FRESH MODE
+          // whats fresh/discover
           const url = user?._id 
     ? `${API_URL}/api/feed/fresh?userId=${user._id}` 
     : `${API_URL}/api/feed/fresh`;
-    
   res = await axios.get(url);
         }
 
@@ -38,11 +36,10 @@ export default function Feed({ type, myCookbooks, user }) {
       } catch (err) {
         console.error("Feed fetch error:", err);
       } finally {
-        setLoading(false);
+        toggleLoad(false);
       }
     };
-
-    fetchFeed();
+    GrabFeed();
   }, [type, user, searchQuery]);
 
   return (
@@ -51,15 +48,12 @@ export default function Feed({ type, myCookbooks, user }) {
         <div className="guest-lock-overlay">
           <div className="guest-card">
             <div className="guest-card-icon">🍳</div>
-            <h2>Welcome to CookUp!</h2>
-            <p>What will you cook up today?</p>
+                <h2>Welcome to CookUp!</h2><p>What will you cook up today?</p>
             <p className="sub-text">Please login or register to continue.</p>
             <div className="guest-actions">
-              <Link to="/login" className="btn-login">Login</Link>
+                <Link to="/login" className="btn-login">Login</Link>
               <Link to="/register" className="btn-register">Register</Link>
-            </div>
-          </div>
-        </div>
+            </div></div></div>
       )}
 
       <div className={`feed ${!user ? "blurred-feed" : ""}`}>
@@ -76,7 +70,7 @@ export default function Feed({ type, myCookbooks, user }) {
         {user && !searchQuery && (
           <div className="feed-header">
             <h2>{type === "timeline" ? "Your Feed" : ""}</h2>
-            <p style={{ color: "#666", fontSize: "0.9rem" }}>
+            <p>
               {type === "timeline" ? (
                 <>
                   Recipes from chefs you follow.
@@ -87,23 +81,19 @@ export default function Feed({ type, myCookbooks, user }) {
                 "Trending recipes based on your activity"
               )}
             </p>
-          </div>
-        )}
-
+          </div>)}
         {loading && (
           <div className="no-data-msg">
             <p>Simmering... 🍲</p>
-          </div>
-        )}
+          </div>)}
 
-        {/* Post List with Search Badges */}
+
         {!loading && posts.length > 0 ? (
           posts.map((post) => {
-            // Determine badge logic
+            // new addition: Determine badge logic to see if it is a match on user or recipe
             const query = searchQuery?.toLowerCase() || "";
             const isRecipeMatch = searchQuery && post.recipeName?.toLowerCase().includes(query);
             const isChefMatch = searchQuery && post.username?.toLowerCase().includes(query);
-
             return (
               <div key={post._id} className="post-wrapper">
                 {searchQuery && (
@@ -125,7 +115,7 @@ export default function Feed({ type, myCookbooks, user }) {
             <div className="no-data-msg">
               {user && type === "timeline" && !searchQuery ? (
                 <>
-                  <p>It's quiet in here... 🦗</p>
+                  <p>It's quiet in the kitchen...</p>
                   <p style={{ fontSize: "0.9rem" }}>Follow some chefs to populate your feed!</p>
                 </>
               ) : (
@@ -136,5 +126,4 @@ export default function Feed({ type, myCookbooks, user }) {
         )}
       </div>
     </div>
-  );
-}
+  );}

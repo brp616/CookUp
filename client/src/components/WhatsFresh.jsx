@@ -34,9 +34,7 @@ const WhatsFresh = ({ user, myCookbooks }) => {
 
         const data = await res.json();
 
-        // 3. Update State
-        // Assuming the Python service returns a JSON object with a list of posts
-        // Adjust 'data.recommendations' based on your actual Python response structure
+        // update the state with recommendations
         setRecommendations(
           Array.isArray(data) ? data : data.recommendations || [],
         );
@@ -47,7 +45,6 @@ const WhatsFresh = ({ user, myCookbooks }) => {
         setLoading(false);
       }
     };
-
     fetchRecommendations();
   }, [user]);
 
@@ -57,7 +54,7 @@ const WhatsFresh = ({ user, myCookbooks }) => {
   return (
     <div className="whats-fresh-page">
       <h2>&nbsp;&nbsp;&nbsp;Top Picks for You</h2>
-      {/* 4. Reuse the Feed component to display the recommended posts */}
+      {/* last step: reuse the Feed component to display the recommended posts */}
       {recommendations.length > 0 ? (
         <Feed posts={recommendations} myCookbooks={myCookbooks} user={user} />
       ) : (

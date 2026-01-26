@@ -1,0 +1,88 @@
+/* styling contact page*/
+.contact-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 60px 20px;
+  color: #333;
+}
+
+.contact-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.contact-header h1 {
+  font-size: 2.8rem;
+  margin-bottom: 15px;
+}
+
+.contact-header p {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: #555;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+}
+
+.member-card {
+  padding: 40px;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #eee;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+}
+
+.member-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.member-role {
+  display: block;
+  color: #e67e22;
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.member-bio {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.btn.primary { background: #333; color: #fff; }
+.btn.primary:hover { background: #000; }
+.btn.secondary { background: #f4f4f4; color: #333; }
+.btn.secondary:hover { background: #e0e0e0; }
+
+.contact-footer {
+  margin-top: 80px;
+  opacity: 0.6;
+  font-size: 0.8rem;
+  text-align: center;
+}

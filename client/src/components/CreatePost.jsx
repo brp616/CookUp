@@ -21,10 +21,11 @@ export default function CreatePost({
   onClose,
   myCookbooks = [],
   user,
+  editingPost = null,
 }) {
   const [images, setImages] = useState([]);
   const [recipeName, setRecipeName] = useState("");
-  const [scrapedTitle, setScrapedTitle] = useState(""); // Stores original metadata
+  const [scrapedTitle, setScrapedTitle] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [description, setDescription] = useState("");
   const [cookTime, setCookTime] = useState(30);
@@ -43,37 +44,63 @@ export default function CreatePost({
     Occasion: ["Weeknight", "Party", "Holiday", "Date Night"],
   };
 
-  // --- AUTO-EXTRACT LOGIC ---
-useEffect(() => {
-  // Only start the timer if the URL is long enough AND we haven't succeeded yet
-  if (!sourceUrl || sourceUrl.length < 10 || hasExtracted) return;
-
-  const extractMetadata = async () => {
-    setIsExtracting(true);
-    try {
-      const res = await axios.post(`${API_URL}/api/extract-recipe`, { url: sourceUrl });
-      
-      if (res.data && res.data.title) {
-        const cleanTitle = res.data.title.trim();
-        // Use a functional update to prevent overwriting manual user input
-        setRecipeName(current => current === "" ? cleanTitle : current);
-        setScrapedTitle(cleanTitle);
-        setHasExtracted(true); 
-      }
-    } catch (error) {
-      console.error("Scraper Error:", error);
-    } finally {
-      setIsExtracting(false);
+  // now we have 2 options based on whether we are creating or editing a post
+  useEffect(() => {
+    if (editingPost && isOpen) {
+      setRecipeName(editingPost.recipeName || "");
+      setSourceUrl(editingPost.sourceUrl || "");
+      setDescription(editingPost.description || "");
+      setCookTime(editingPost.cookTime || 30);
+      setDifficulty(editingPost.difficulty || "Medium");
+      setRating(editingPost.rating || 0);
+      setImages(editingPost.dishImages || []);
+      setSelectedTags(editingPost.tags || []);
+      setCookbookCategory(editingPost.cookbookCategory || "none");
+      setVisibility(editingPost.visibility || "public");
+      setScrapedTitle(editingPost.recipeTitle || "");
+      setHasExtracted(true);
+    } else if (!editingPost && isOpen) {
+      setRecipeName("");
+      setSourceUrl("");
+      setDescription("");
+      setCookTime(30);
+      setDifficulty("Medium");
+      setRating(0);
+      setImages([]);
+      setSelectedTags([]);
+      setCookbookCategory("none");
+      setVisibility("public");
+      setHasExtracted(false);
     }
-  };
+  }, [editingPost, isOpen]);
 
-  const debounceTimer = setTimeout(extractMetadata, 1000);
-  return () => clearTimeout(debounceTimer);
-}, [sourceUrl, hasExtracted]); // recipeName removed from here to stop the loop
+  useEffect(() => {
+    if (!sourceUrl || sourceUrl.length < 10 || hasExtracted) return;
+
+    const extractMetadata = async () => {
+      setIsExtracting(true);
+      try {
+        const res = await axios.post(`${API_URL}/api/extract-recipe`, { url: sourceUrl });
+        if (res.data && res.data.title) {
+          const cleanTitle = res.data.title.trim();
+          setRecipeName(current => current === "" ? cleanTitle : current);
+          setScrapedTitle(cleanTitle);
+          setHasExtracted(true);
+        }
+      } catch (error) {
+        console.error("Scraper Error:", error);
+      } finally {
+        setIsExtracting(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(extractMetadata, 1000);
+    return () => clearTimeout(debounceTimer);
+  }, [sourceUrl, hasExtracted]);
 
   const handleTagToggle = (tag) => {
     setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   };
 
@@ -104,14 +131,14 @@ useEffect(() => {
       });
       const newUrls = await Promise.all(uploadPromises);
       setImages((current) => [...current, ...newUrls]);
-    } catch (error) { // Make sure this says 'error'
-  console.error("Cloudinary Error:", error);
-  alert("Image upload failed: " + error.message);
-} finally {
-  setIsUploading(false);
-  e.target.value = null;
-}
-    };
+    } catch (error) {
+      console.error("Cloudinary Error:", error);
+      alert("Image upload failed: " + error.message);
+    } finally {
+      setIsUploading(false);
+      e.target.value = null;
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -122,9 +149,9 @@ useEffect(() => {
       user: user._id,
       username: user.username,
       userAvatar: user.profilePic || `https://ui-avatars.com/api/?name=${user.username}`,
-      recipeName: recipeName,      // User's choice
-      recipeTitle: scrapedTitle,   // Original metadata title
-      sourceUrl: sourceUrl,
+      recipeName,
+      recipeTitle: scrapedTitle,
+      sourceUrl,
       recipeLink: sourceUrl,
       description,
       dishImages: images,
@@ -137,8 +164,13 @@ useEffect(() => {
     };
 
     try {
-      const res = await fetch(`${API_URL}/api/posts`, {
-        method: "POST",
+      const method = editingPost ? "PATCH" : "POST";
+      const url = editingPost 
+        ? `${API_URL}/api/posts/${editingPost._id}` 
+        : `${API_URL}/api/posts`;
+
+      const res = await fetch(url, {
+        method: method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -158,12 +190,11 @@ useEffect(() => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Share Your Cook</h2>
+          <h2>{editingPost ? "Edit Your Cook" : "Share Your Cook"}</h2>
           <button className="close-x" onClick={onClose}><LuX /></button>
         </div>
 
         <form className="modal-form scrollable-form" onSubmit={handleSubmit}>
-          {/* LINK INPUT */}
           <div className="input-group">
             <label>
               <LuLink size={14} /> Recipe Link 
@@ -174,17 +205,12 @@ useEffect(() => {
               placeholder="Paste recipe URL..."
               value={sourceUrl}
               onChange={(e) => {
-    setSourceUrl(e.target.value);
-    // Reset the lock if the user clears the box
-    if (e.target.value.length < 10) {
-      setHasExtracted(false);
-      // Optional: setRecipeName(""); // Only do this if you want the title to clear too
-    }
-  }}
+                setSourceUrl(e.target.value);
+                if (e.target.value.length < 10) setHasExtracted(false);
+              }}
             />
           </div>
 
-          {/* NAME INPUT */}
           <div className="input-group">
             <label>Recipe Name</label>
             <input
@@ -196,7 +222,6 @@ useEffect(() => {
             />
           </div>
 
-          {/* TIME & DIFFICULTY */}
           <div className="form-row">
             <div className="input-group">
               <label><LuClock size={14} /> Mins</label>
@@ -212,7 +237,6 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* RATING */}
           <div className="input-group">
             <label>Your Rating</label>
             <div className="star-rating-input">
@@ -228,7 +252,6 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* DESCRIPTION */}
           <div className="input-group">
             <label>Notes</label>
             <textarea
@@ -238,7 +261,6 @@ useEffect(() => {
             />
           </div>
 
-          {/* TAGS */}
           <div className="input-group">
             <label><LuTag size={14} /> Tags</label>
             <div className="tags-container">
@@ -252,7 +274,9 @@ useEffect(() => {
                         type="button"
                         className={`tag-choice ${selectedTags.includes(tag) ? "active" : ""}`}
                         onClick={() => handleTagToggle(tag)}
-                      >{tag}</button>
+                      >
+                        {tag}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -260,7 +284,6 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* COOKBOOK SELECT */}
           <div className="form-group">
             <label>Save to Cookbook</label>
             <select
@@ -275,7 +298,6 @@ useEffect(() => {
             </select>
           </div>
 
-          {/* IMAGE UPLOAD */}
           <div className="image-upload-zone">
             <input
               type="file"
@@ -299,7 +321,6 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* VISIBILITY */}
           <div className="form-group" style={{ marginBottom: "20px" }}>
             <label style={{ fontWeight: "bold" }}>Privacy</label>
             <select
@@ -313,7 +334,7 @@ useEffect(() => {
           </div>
 
           <button type="submit" className="share-btn" disabled={isUploading || images.length === 0}>
-            {isUploading ? "Uploading..." : "Share Cook"}
+            {isUploading ? "Uploading..." : editingPost ? "Save Changes" : "Share Cook"}
           </button>
         </form>
       </div>

@@ -3,39 +3,32 @@ import { useNavigate } from "react-router-dom";
 import { FiSearch } from "react-icons/fi";
 
 export default function SearchBar() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchterm, setsearchterm] = useState("");
   const navigate = useNavigate();
 
-  const handleSearch = (e) => {
+  const dosearch = (e) => {
     e.preventDefault();
-    if (searchTerm.trim()) {
-      // Navigate to Home Page with a query parameter
-      navigate(`/?search=${encodeURIComponent(searchTerm)}`);
-      setSearchTerm(""); // Optional: clear after search
+    if (searchterm.trim()) {
+      navigate(`/?search=${encodeURIComponent(searchterm)}`);
+      setsearchterm("");
     }
   };
-
   return (
-    <form onSubmit={handleSearch} className="search-container">
+    <form onSubmit={dosearch} className="search-container">
       <input
         type="text"
         placeholder="Search..."
         className="search-input"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        value={searchterm}
+        onChange={(e) => setsearchterm(e.target.value)}
       />
       <button
         type="submit"
-        style={{
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          padding: 0,
-          display: "flex",
+        style={{background: "none",border: "none", cursor: "pointer",padding: 0,display: "flex",
         }}
       >
         <FiSearch className="search-icon" color="#888" />
-      </button>
+    </button>
     </form>
   );
 }

@@ -3,90 +3,77 @@ import axios from "axios";
 import Post from "../models/Post.js";
 import User from "../models/user.js";
 
-const pythonUrl = process.env.PYTHON_SERVICE_URL || "http://127.0.0.1:8000";
-
 const router = express.Router();
 
-/**
- * GET /api/feed/fresh
- * Purpose: A "True Discover" feed that shows recipes ONLY from 
- * chefs the user does NOT follow and is NOT themselves.
- */
+// Using the Render env var, fallback to local
+const pythonUrl = process.env.PYTHON_SERVICE_URL || "http://127.0.0.1:8000";
+
 router.get("/fresh", async (req, res) => {
   const { userId } = req.query;
+  // quick check - sometimes frontend sends "undefined" as a string
+  const validUser = userId && userId !== "undefined";
 
   try {
-    let excludeIds = [];
-
-    if (userId && userId !== "undefined") {
-      excludeIds.push(userId); 
-      const currentUser = await User.findById(userId);
-      if (currentUser && currentUser.following) {
-        const followingIds = currentUser.following.map(id => id.toString());
-        excludeIds = [...excludeIds, ...followingIds];
-      }
-    }
-
-    // 2. Fetch recommendations from Python AI service
+    let excludeIDS = [];
     let recommendedIds = [];
-    if (userId && userId !== "undefined") {
+
+    if (validUser) {
+      excludeIDS.push(userId);
+      const CurrentUser = await User.findById(userId).lean(); // .lean() for speed
+      
+      if (CurrentUser?.following) {
+        const followingIds = CurrentUser.following.map(id => id.toString());
+        excludeIDS = [...excludeIDS, ...followingIds];
+      }
+
+      // try the python ai service
       try {
-        const pythonResponse = await axios.get(
-          `${pythonUrl}/recommend/${userId}`,
-          { timeout: 3000 }
-        );
-        
-        // FIX: Access the correct key from your FastAPI response
-        recommendedIds = pythonResponse.data.recommendations || [];
-        
-        console.log(`✅ AI Service returned ${recommendedIds.length} IDs for user ${userId}`);
+        const pyRes = await axios.get(`${pythonUrl}/recommend/${userId}`, { timeout: 3500 });
+        // key check: pyRes.data.recommendations
+        recommendedIds = pyRes.data?.recommendations || [];
+        console.log(`huzzah! got ${recommendedIds.length} IDs from AI for ${userId}`);
       } catch (err) {
-        console.warn("⚠️ AI Service unreachable or timed out. Falling back to latest.");
+        console.warn("ope - AI timed out. Falling back to latest.");
       }
     }
 
-    const discoveryQuery = {
-      user: { $nin: excludeIds }
-    };
+    let finalPosts = [];
 
-   let finalPosts = [];
-
+    // try to fill based on what the AI liked
     if (recommendedIds.length > 0) {
-      // Find the posts recommended by AI. 
-      // We only exclude the user's OWN posts so they don't see themselves.
       const posts = await Post.find({
         _id: { $in: recommendedIds },
-        user: { $ne: userId } // Only exclude YOU, allow people you follow for now
-      });
+        user: { $ne: userId } // don't show user their own stuff
+      }).populate("user", "username");
 
-      // Maintain AI ranking order
+      // keep the order the AI gave us
       finalPosts = recommendedIds
-        .map((id) => posts.find((p) => p._id.toString() === id))
-        .filter((p) => p !== undefined);
-      
-      console.log(`✅ AI delivered ${finalPosts.length} posts to the feed.`);
+        .map(id => posts.find(p => p._id.toString() === id))
+        .filter(Boolean);
     }
 
-    // 4. Fallback: If AI didn't give enough, fill the rest with "Discovery" posts
+    // if AI failed or we just need more content
     if (finalPosts.length < 10) {
-      console.log("Adding discovery posts to fill the gaps...");
+      console.log("filling gaps with recent posts...");
+      
+      const seenIds = finalPosts.map(p => p._id);
       const morePosts = await Post.find({
-        user: { $nin: excludeIds }, // Use strict discovery here
-        _id: { $nin: finalPosts.map(p => p._id) } // Don't duplicate what AI already found
+        user: { $nin: excludeIDS },
+        _id: { $nin: seenIds }
       })
       .sort({ createdAt: -1 })
-      .limit(15);
+      .limit(15)
+      .populate("user", "username");
 
       finalPosts = [...finalPosts, ...morePosts];
     }
 
-    res.json(finalPosts);
-
-  } catch (err) {
-    console.error("Discover Feed Error:", err.message);
-    const emergencyPosts = await Post.find().sort({ createdAt: -1 }).limit(10);
-    res.json(emergencyPosts);
-  }
-});
+    res.json(finalPosts.slice(0, 20)); // cap it at 20
+} catch (err) {
+    console.error("Discover Feed Error:", err);
+    // last ditch effort
+    const emergency = await Post.find().sort({ createdAt: -1 }).limit(10);
+    res.json(emergency);
+  }});
 
 export default router;

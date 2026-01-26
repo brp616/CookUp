@@ -1,61 +1,102 @@
 import express from "express";
-import Cookbook from "../models/Cookbook.js"; 
+import Cookbook from "../models/Cookbook.js";
 
 const router = express.Router();
 
-// 1. GET cookbooks for a specific user
-// Usage: /api/cookbooks?userId=123
-router.get('/', async (req, res) => {
+/**
+ * GET: Fetch cookbooks for a specific user
+ * URL example: /api/cookbooks?userId=12345
+ */
+router.get("/", async (req, res) => {
   const { userId } = req.query;
 
-  // Check for null, undefined, or the literal string "undefined"
+  // Safety check for guest users or malformed IDs
   if (!userId || userId === "undefined" || userId === "null") {
-    // Instead of a 400 error, just return an empty array.
-    // This stops the "vanishing" effect and prevents the console error.
-    return res.json([]); 
+    return res.json([]);
   }
 
   try {
-    const books = await Cookbook.find({ user: userId });
+    // Finds all custom cookbooks created by this user
+    const books = await Cookbook.find({ userId: userId });
     res.json(books);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("GET Cookbooks Error:", err);
+    res.status(500).json({ message: "Error fetching cookbooks." });
   }
 });
 
-// 2. POST a new cookbook tied to a userId
-router.post('/', async (req, res) => {
+/**
+ * POST: Create a new cookbook
+ */
+router.post("/", async (req, res) => {
   try {
-    // Expecting { title, userId, ... } in req.body
-    console.log("--- DEBUG: Incoming Post Data ---");
-  console.log(req.body); // Check your TERMINAL (not browser) for this output
     const { title, userId, color, icon, subtitle, visibility } = req.body;
 
+    // Basic Validation
+    if (!title || !userId) {
+      return res.status(400).json({ message: "Title and userId are required." });
+    }
+
+    // Generate a 'category' slug from the title.
+    // This is used to link Posts to this specific folder.
+    const categorySlug = title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "") // Remove special characters
+      .replace(/\s+/g, "-");    // Replace spaces with dashes
+
     const newBook = new Cookbook({
+      userId,
       title,
-      subtitle,
-      color,
-      icon,
-      user: userId,
-      visibility: visibility || 'public'
+      subtitle: subtitle || "Personal Collection",
+      color: color || "#f3d2a2",
+      icon: icon || "📚",
+      category: categorySlug,
+      visibility: visibility || "public", // Schema enum handles "public" vs "followers"
     });
 
     const savedBook = await newBook.save();
-    res.json(savedBook);
+    res.status(201).json(savedBook);
   } catch (err) {
+    console.error("POST Cookbook Error:", err);
+
+    // Check if the 500 was caused by the 'unique' index on category (if not yet deleted)
+    if (err.code === 11000) {
+      return res.status(400).json({ 
+        message: "A cookbook with a similar name already exists. Please try a unique title." 
+      });
+    }
+
     res.status(500).json({ message: err.message });
   }
 });
 
-// 3. DELETE a cookbook
-router.delete('/:id', async (req, res) => {
+/**
+ * DELETE: Remove a cookbook by ID
+ * Note: Recipes associated with this category stay in the DB
+ */
+router.delete("/:id", async (req, res) => {
   try {
-    await Cookbook.findByIdAndDelete(req.params.id);
-    res.json({ message: "Deleted" });
+    const { userId } = req.query; // Ensure user identity for security
+    const bookId = req.params.id;
+
+    const book = await Cookbook.findById(bookId);
+
+    if (!book) {
+      return res.status(404).json({ message: "Cookbook not found." });
+    }
+
+    // Security: Only allow the owner to delete it
+    if (book.userId !== userId) {
+      return res.status(403).json({ message: "You do not have permission to delete this book." });
+    }
+
+    await Cookbook.findByIdAndDelete(bookId);
+    res.json({ message: "Cookbook deleted successfully." });
   } catch (err) {
+    console.error("DELETE Cookbook Error:", err);
     res.status(500).json({ message: err.message });
   }
 });
-
 
 export default router;
