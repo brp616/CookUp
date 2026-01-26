@@ -23,8 +23,9 @@ function App() {
   const savedUser = localStorage.getItem("user"); return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalinuse, setmodalinuse] = useState(false);
   const [posts, setPosts] = useState([]);
+  //setting default cookbooks so users have a place to put recipes when they start
   const [myCookbooks, setMyCookbooks] = useState([
     {
       _id: "default-1",
@@ -50,10 +51,9 @@ function App() {
     window.location.href = "/login";
   };
 
-  // 2. USER SYNC: Cleaned ID to prevent ":1" or 404 errors
+  
   useEffect(() => {
     const syncUser = async () => {
-      // Logic fix: Ensure ID is present and strip any stray characters
       if (user && user._id) {
         try {
           const cleanId = String(user._id).split(":")[0].trim(); // Removes ":1" if it exists
@@ -72,7 +72,7 @@ function App() {
     syncUser();
   }, []);
 
-  // 3. Unified Data Fetch: Posts and Cookbooks
+  // fetch our data for posts and cookbook
   useEffect(() => {
   const fetchPosts = async () => {
     try {
@@ -84,26 +84,23 @@ function App() {
     }
   };
   fetchPosts();
-}, []); // Keep this empty so it only runs once on load
-
+}, []);
+//actually build out the site
   return (
     <div className="app-container">
       {user && (
         <div className="add-cook-container">
-          <button className="add-cook-btn" onClick={() => setIsModalOpen(true)}>
-            <LuPlus size={32} strokeWidth={3} />
-          </button>
+          <button className="add-cook-btn" onClick={() => setmodalinuse(true)}><LuPlus size={32} strokeWidth={3} /></button>
         </div>
       )}
-
       <CreatePost
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={modalinuse}
+        onClose={() => setmodalinuse(false)}
         myCookbooks={myCookbooks}
         user={user}
         setPosts={setPosts}
       />
-
+{/* routes galore */}
       <BrowserRouter>
         <Navbar user={user} onLogout={handleLogout} />
 
