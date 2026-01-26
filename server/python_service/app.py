@@ -84,6 +84,3 @@ def recommend(user_id: str):
     
     # Return the clean list
     return {"recommendations": full_posts}
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)

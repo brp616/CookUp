@@ -3,11 +3,11 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import "../styles/NavBar.css";
-import logo from "../assets/Logo_NavBar.png";
+   import logo from "../assets/Logo_NavBar.png";
 
  export default function Navbar({ user, onLogout }) {
   const navigate = useNavigate(); 
-  const handleLogoutClick = () => {
+  const handleLogoutact = () => {
     onLogout(); 
     navigate("/login");
   };
@@ -47,9 +47,7 @@ import logo from "../assets/Logo_NavBar.png";
         <div
           className="auth-buttons"
           style={{
-              marginLeft: "15px", display: "flex",
-            alignItems: "center",
-            gap: "10px",
+              
           }}
         >
           {user ? (
@@ -58,7 +56,7 @@ import logo from "../assets/Logo_NavBar.png";
                 Hello, <strong>{user.username}</strong>
               </span>
               {/* --- actually handle login/logout --- */}
-              <button onClick={handleLogoutClick} className="nav-btn logout">
+              <button onClick={handleLogoutact} className="nav-btn logout">
                 Logout
               </button>
             </>
