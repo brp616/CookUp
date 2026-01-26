@@ -42,7 +42,7 @@ Example screenshots:
   <img src="./Screenshot 2026-01-26 121353.png" width="800px" alt="CookUp Interface 1">
 </p>
 <p align="center">
-  <img src=".Screenshot 2026-01-26 121431.png" width="800px" alt="CookUp Interface 2">
+  <img src="./Screenshot 2026-01-26 121431.png" width="800px" alt="CookUp Interface 2">
 </p>
 
 BSON: Used for handling MongoDB's Binary JSON data types (like ObjectId).
