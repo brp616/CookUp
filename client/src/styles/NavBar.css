@@ -155,3 +155,10 @@ button.nav-btn {
   color: var(--white);    /* Use your variable to match the theme */
   font-weight: 500;
 }
+
+.auth-buttons {
+    margin-left: 15px;
+    display: flex;
+            align-items: center;
+            gap: 10px,
+}

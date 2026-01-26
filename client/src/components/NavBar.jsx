@@ -1,31 +1,30 @@
+//Component housing the navbar at the top of the page with nav links, search bar, and login buttons
+
 import { NavLink, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import "../styles/NavBar.css";
 import logo from "../assets/Logo_NavBar.png";
 
-export default function Navbar({ user, onLogout }) {
-  const navigate = useNavigate();
-
-  // This wrapper ensures the global state is cleared before navigating
+ export default function Navbar({ user, onLogout }) {
+  const navigate = useNavigate(); 
   const handleLogoutClick = () => {
-    onLogout(); // Clears App.js state & localStorage
+    onLogout(); 
     navigate("/login");
   };
 
   return (
     <nav className="navbar">
-      {/* Left: Logo */}
+                {/*logo, name*/}
       <NavLink to="/" className="logo">
         CookUp!
         <img src={logo} alt="CookUp logo" className="logo-img" />
       </NavLink>
-
-      {/* Center: Navigation */}
+        {/*navigate to pages*/}
       <ul className="navbar-links">
         <li>
           <NavLink to="/">Feed</NavLink>
         </li>
-        <li>
+          <li>
           <NavLink to="/cookbooks">Cookbooks</NavLink>
         </li>
         <li>
@@ -42,15 +41,13 @@ export default function Navbar({ user, onLogout }) {
       </ul>
 
       <div className="navbar-right">
-        {/* Right: Search */}
         <SearchBar />
 
-        {/* --- AUTH SECTION --- */}
+        {/* --- Login section --- */}
         <div
           className="auth-buttons"
           style={{
-            marginLeft: "15px",
-            display: "flex",
+              marginLeft: "15px", display: "flex",
             alignItems: "center",
             gap: "10px",
           }}
@@ -60,7 +57,7 @@ export default function Navbar({ user, onLogout }) {
               <span className="user-greeting">
                 Hello, <strong>{user.username}</strong>
               </span>
-
+              {/* --- actually handle login/logout --- */}
               <button onClick={handleLogoutClick} className="nav-btn logout">
                 Logout
               </button>
