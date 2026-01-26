@@ -248,10 +248,10 @@ export default function Profile({ currentUser, setUser }) {
 
           <div className="profile-stats">
             <span>
-              <strong>{posts.length}</strong> Cooks
+              <strong>{posts.length}</strong> {posts.length === 1 ? "Cook" : "Cooks"}
             </span>
             <span>
-              <strong>{profileUser.followers?.length || 0}</strong> Followers
+              <strong>{profileUser.followers?.length || 0}</strong> {profileUser.followers?.length === 1 ? "Follower" : "Followers"}
             </span>
             <span>
               <strong>{profileUser.following?.length || 0}</strong> Following
@@ -263,7 +263,10 @@ export default function Profile({ currentUser, setUser }) {
                   0,
                 )}
               </strong>{" "}
-              Yums
+              {posts.reduce(
+                (total, post) => total + (post.kudos?.length || 0),
+                0,
+              ) === 1 ? "Yum" : "Yums"}
             </span>
           </div>
         </div>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import RecipePost from "./RecipePost.jsx";
 import "../styles/Feed.css";
@@ -8,34 +7,31 @@ import "../styles/Feed.css";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
 
 export default function Feed({ type, myCookbooks, user }) {
-  // 1. Internal State (Since App.jsx no longer passes 'posts')
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search");
 
-  // 2. Data Fetching Logic
   useEffect(() => {
     const fetchFeed = async () => {
       setLoading(true);
       try {
         let res;
-
-        // --- PRIORITY LOGIC ---
         if (searchQuery) {
-          // 1. SEARCH MODE (Highest Priority)
-          // If URL has ?search=... ignore 'type' and search everything
+          // 1. SEARCH MODE
           res = await axios.get(`${API_URL}/api/posts/search?q=${searchQuery}`);
         } else if (user && type === "timeline") {
-          // 2. TIMELINE MODE (Logged In + Home Tab)
+          // 2. FEED MODE
           res = await axios.get(`${API_URL}/api/posts/timeline/${user._id}`);
         } else {
-          // 3. GLOBAL/GUEST MODE (Fresh Tab or Not Logged In)
-          res = await axios.get(`${API_URL}/api/posts`);
+          // 3. WHATS FRESH MODE
+          const url = user?._id 
+    ? `${API_URL}/api/feed/fresh?userId=${user._id}` 
+    : `${API_URL}/api/feed/fresh`;
+    
+  res = await axios.get(url);
         }
-        // ----------------------
 
-        // Handle response format (Array vs Object wrapper)
         const data = Array.isArray(res.data) ? res.data : res.data.posts || [];
         setPosts(data);
       } catch (err) {
@@ -50,7 +46,6 @@ export default function Feed({ type, myCookbooks, user }) {
 
   return (
     <div className="feed-container">
-      {/* 3. GUEST OVERLAY (Your existing code) */}
       {!user && (
         <div className="guest-lock-overlay">
           <div className="guest-card">
@@ -58,66 +53,86 @@ export default function Feed({ type, myCookbooks, user }) {
             <h2>Welcome to CookUp!</h2>
             <p>What will you cook up today?</p>
             <p className="sub-text">Please login or register to continue.</p>
-
             <div className="guest-actions">
-              <Link to="/login" className="btn-login">
-                Login
-              </Link>
-              <Link to="/register" className="btn-register">
-                Register
-              </Link>
+              <Link to="/login" className="btn-login">Login</Link>
+              <Link to="/register" className="btn-register">Register</Link>
             </div>
           </div>
         </div>
       )}
 
-      {/* 4. THE FEED CONTENT */}
-      {/* We keep the 'blurred-feed' class if no user is present */}
       <div className={`feed ${!user ? "blurred-feed" : ""}`}>
-        {/* Header for Logged In Users */}
-        {user && (
-          <div className="feed-header" style={{ padding: "0 1rem" }}>
-            <h2>{type === "timeline" ? "Your Feed" : "Explore"}</h2>
+        {/* Search Results Header */}
+        {searchQuery && (
+          <div className="search-header">
+            <h3>Results for "{searchQuery}"</h3>
+            <p>{posts.length} matches found</p>
+            <Link to="/" className="clear-search-link">Clear Search</Link>
+          </div>
+        )}
+
+        {/* Regular Header (Only show if not searching) */}
+        {user && !searchQuery && (
+          <div className="feed-header">
+            <h2>{type === "timeline" ? "Your Feed" : ""}</h2>
             <p style={{ color: "#666", fontSize: "0.9rem" }}>
-              {type === "timeline"
-                ? "Recipes from chefs you follow"
-                : "Trending recipes"}
+              {type === "timeline" ? (
+                <>
+                  Recipes from chefs you follow.
+                  <br />
+                  Want to find more chefs? Click on "What's Fresh" or search their username!
+                </>
+              ) : (
+                "Trending recipes based on your activity"
+              )}
             </p>
           </div>
         )}
 
-        {/* Loading State */}
         {loading && (
           <div className="no-data-msg">
             <p>Simmering... 🍲</p>
           </div>
         )}
 
-        {/* Post List */}
-        {!loading && posts.length > 0
-          ? posts.map((post) => (
-              <RecipePost
-                key={post._id}
-                post={post}
-                myCookbooks={myCookbooks}
-                user={user}
-              />
-            ))
-          : /* Empty State (Only show if NOT loading) */
-            !loading && (
-              <div className="no-data-msg">
-                {user && type === "timeline" ? (
-                  <>
-                    <p>It's quiet in here... 🦗</p>
-                    <p style={{ fontSize: "0.9rem" }}>
-                      Follow some chefs to populate your feed!
-                    </p>
-                  </>
-                ) : (
-                  <p>No recipes found.</p>
+        {/* Post List with Search Badges */}
+        {!loading && posts.length > 0 ? (
+          posts.map((post) => {
+            // Determine badge logic
+            const query = searchQuery?.toLowerCase() || "";
+            const isRecipeMatch = searchQuery && post.recipeName?.toLowerCase().includes(query);
+            const isChefMatch = searchQuery && post.username?.toLowerCase().includes(query);
+
+            return (
+              <div key={post._id} className="post-wrapper">
+                {searchQuery && (
+                  <div className="search-badge-container">
+                    {isRecipeMatch && <span className="search-badge recipe-match">🍴 Recipe Match</span>}
+                    {isChefMatch && <span className="search-badge chef-match">👨‍🍳 Chef Match</span>}
+                  </div>
                 )}
+                <RecipePost
+                  post={post}
+                  myCookbooks={myCookbooks}
+                  user={user}
+                />
               </div>
-            )}
+            );
+          })
+        ) : (
+          !loading && (
+            <div className="no-data-msg">
+              {user && type === "timeline" && !searchQuery ? (
+                <>
+                  <p>It's quiet in here... 🦗</p>
+                  <p style={{ fontSize: "0.9rem" }}>Follow some chefs to populate your feed!</p>
+                </>
+              ) : (
+              ""
+              )}
+            </div>
+          )
+        )}
       </div>
     </div>
   );

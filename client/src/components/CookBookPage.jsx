@@ -1,11 +1,10 @@
-import React, { useState, memo } from 'react';
-import { Link } from 'react-router-dom'; // Added for the overlay links
+import React, { useState, useEffect, memo } from 'react';
+import { Link } from 'react-router-dom'; 
 import RecipePost from './RecipePost'; 
 import '../styles/Cookbooks.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 
-// Added "user" to the props list
 const Cookbooks = ({ allPosts, myCookbooks, setMyCookbooks, user }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [activeCookbook, setActiveCookbook] = useState(null);
@@ -13,16 +12,50 @@ const Cookbooks = ({ allPosts, myCookbooks, setMyCookbooks, user }) => {
     title: "",
     subtitle: "",
     color: "#f3d2a2",
-    icon: "📚"
+    icon: "📚",
+    visibility: "public" // Initialize here
   });
+
+  // --- FETCH LOGIC (Load user-specific books on mount) ---
+  useEffect(() => {
+  if (!user?._id) return;
+
+  const fetchUserCookbooks = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/cookbooks?userId=${user._id}`);
+      
+      if (response.ok) {
+        const dbData = await response.json();
+        
+        // FIX: Only update if we actually got books back from the DB
+        if (dbData && dbData.length > 0) {
+          setMyCookbooks(prevBooks => {
+            // This prevents adding the same book twice if the effect runs again
+            const existingIds = new Set(prevBooks.map(b => b._id));
+            const uniqueNewBooks = dbData.filter(b => !existingIds.has(b._id));
+            return [...prevBooks, ...uniqueNewBooks];
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch cookbooks:", err);
+    }
+  };
+
+  fetchUserCookbooks();
+}, [user?._id]);
 
   // --- DELETE LOGIC ---
   const handleDeleteCookbook = async (id) => {
+    if (!user?._id) return;
+    
     if (window.confirm("Are you sure? This won't delete your recipes, just the cookbook folder.")) {
       try {
-        const response = await fetch(`${API_URL}/api/cookbooks/${id}`, {
+        // Passing userId as a query param to match your simple backend logic
+        const response = await fetch(`${API_URL}/api/cookbooks/${id}?userId=${user._id}`, {
           method: 'DELETE',
         });
+        
         if (response.ok) {
           setMyCookbooks(myCookbooks.filter(b => b._id !== id));
           setActiveCookbook(null); 
@@ -35,12 +68,15 @@ const Cookbooks = ({ allPosts, myCookbooks, setMyCookbooks, user }) => {
 
   // --- SAVE LOGIC ---
   const finalizeBook = async () => {
+    console.log("User Prop Value:", user);
     if (!newBookData.title) return alert("Please give your book a title!");
-    
+    if (!user?._id) return alert("You must be logged in to create a cookbook.");
+
     const bookToSave = {
       ...newBookData,
+      userId: user._id, // Crucial: sending the ID to the backend
       subtitle: newBookData.subtitle || "Personal Collection",
-      category: newBookData.title.toLowerCase().replace(/\s+/g, '-')
+      category: newBookData.title.toLowerCase().trim().replace(/\s+/g, '-')
     };
 
     try {
@@ -74,8 +110,7 @@ const Cookbooks = ({ allPosts, myCookbooks, setMyCookbooks, user }) => {
     const filteredPosts = getFilteredPosts();
     return (
       <div className="opened-book-container">
-         {/* Reusing the blur class if user logs out while book is open */}
-         {!user && (
+          {!user && (
             <div className="guest-lock-overlay">
               <div className="guest-card">
                 <div className="guest-card-icon">📚</div>
@@ -124,7 +159,6 @@ const Cookbooks = ({ allPosts, myCookbooks, setMyCookbooks, user }) => {
   // --- VIEW 2: THE BOOKSHELF ---
   return (
     <div className="cookbooks-page-container">
-      {/* 1. GUEST OVERLAY */}
       {!user && (
         <div className="guest-lock-overlay">
           <div className="guest-card">
@@ -140,7 +174,6 @@ const Cookbooks = ({ allPosts, myCookbooks, setMyCookbooks, user }) => {
         </div>
       )}
 
-      {/* 2. THE CONTENT */}
       <div className={`cookbooks-page ${!user ? "blurred-feed" : ""}`}>
         <header className="shelf-header">
           <h1>Your Cookbooks</h1>

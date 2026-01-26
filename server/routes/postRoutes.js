@@ -21,6 +21,7 @@ router.get("/search", async (req, res) => {
           $or: [
             { recipeName: { $regex: q, $options: "i" } }, // Match Name (case insensitive)
             { description: { $regex: q, $options: "i" } }, // Match Description
+            { username: { $regex: q, $options: "i" } },
             { tags: { $regex: q, $options: "i" } }, // Match Tags
           ],
         },

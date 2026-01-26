@@ -446,6 +446,79 @@
 
 }
 
+
+
+/* --- YUM SUMMARY IN MODAL HEADER --- */
+.modal-header .header-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.yum-summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #e67e22; /* Warm food-themed orange/brown */
+}
+
+.yum-icon-small {
+    font-size: 1rem;
+    color: #e67e22;
+}
+
+/* --- AVATAR STACK ROW --- */
+.yum-avatar-row {
+    padding: 12px 20px;
+    background: #fffcf5; /* Subtle "paper" or "flour" white */
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+}
+
+.avatar-stack {
+    display: flex;
+    /* This allows the first avatar to be on top of the second, etc. */
+    flex-direction: row; 
+    align-items: center;
+}
+
+.stacked-yum-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #fff; /* Creates the gap between overlapping circles */
+    margin-right: -10px; /* The overlap! Change this to -12px for tighter stack */
+    object-fit: cover;
+    background: #f0f0f0;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stacked-yum-avatar:hover {
+    transform: translateY(-3px);
+    z-index: 10; /* Brings the hovered avatar to the front */
+    margin-right: 0px; /* Optional: adds a little space when hovering */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.yum-more-count {
+    margin-left: 18px; /* Offset to account for the last negative margin */
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+/* --- NO COMMENTS STATE --- */
+.no-comments {
+    padding: 40px;
+    text-align: center;
+    color: #95a5a6;
+    font-style: italic;
+}
+
 /* --- UTILS --- */
 .delete-post-btn {
   position: absolute;
@@ -480,6 +553,8 @@
   display: flex;
   flex-direction: column;
 }
+
+
 
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

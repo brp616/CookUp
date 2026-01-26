@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Feed from "./Feed"; // Reuse your existing Feed UI
+import "../styles/WhatsFresh.css";
 
 // Update this if your Python service runs on a different port/URL
 const REC_SERVICE_URL = import.meta.env.VITE_REC_URL || "http://localhost:8000";
@@ -55,7 +56,7 @@ const WhatsFresh = ({ user, myCookbooks }) => {
 
   return (
     <div className="whats-fresh-page">
-      <h2>Top Picks for You</h2>
+      <h2>&nbsp;&nbsp;&nbsp;Top Picks for You</h2>
       {/* 4. Reuse the Feed component to display the recommended posts */}
       {recommendations.length > 0 ? (
         <Feed posts={recommendations} myCookbooks={myCookbooks} user={user} />

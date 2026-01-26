@@ -11,6 +11,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Profile from "./components/Profile";
 import WhatsFresh from "./components/WhatsFresh";
+import Contact from "./components/contact";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
 
@@ -72,24 +73,17 @@ function App() {
 
   // 3. Unified Data Fetch: Posts and Cookbooks
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [postRes, bookRes] = await Promise.all([
-          fetch(`${API_URL}/api/posts`),
-          fetch(`${API_URL}/api/cookbooks`),
-        ]);
-
-        const postData = await postRes.json();
-        const bookData = await bookRes.json();
-
-        setPosts(Array.isArray(postData) ? postData : postData.posts || []);
-        setMyCookbooks(Array.isArray(bookData) ? bookData : []);
-      } catch (err) {
-        console.error("Fetch failed:", err);
-      }
-    };
-    fetchData();
-  }, []);
+  const fetchPosts = async () => {
+    try {
+      const postRes = await fetch(`${API_URL}/api/posts`);
+      const postData = await postRes.json();
+      setPosts(Array.isArray(postData) ? postData : postData.posts || []);
+    } catch (err) {
+      console.error("Fetch posts failed:", err);
+    }
+  };
+  fetchPosts();
+}, []); // Keep this empty so it only runs once on load
 
   return (
     <div className="app-container">
@@ -142,7 +136,7 @@ function App() {
             path="/profile/:userId"
             element={<Profile currentUser={user} setUser={setUser} />}
           />
-          <Route path="/contact" element={<h1>Contact Us</h1>} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login setUser={setUser} />} />
           <Route path="/register" element={<Register setUser={setUser} />} />
           <Route

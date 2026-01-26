@@ -8,19 +8,26 @@ export default function RecipePost({ post, myCookbooks }) {
     // --- AUTH CHECK ---
     const currentUser = JSON.parse(localStorage.getItem("user"));
     const currentUserId = currentUser?._id;
+    const TEST_AVATAR = `https://ui-avatars.com/api/?name=${post.username}&background=random`;
 
     const [comments, setComments] = useState(post.comments || []);
     const [commentText, setCommentText] = useState("");
-    const [showCommentModal, setShowCommentModal] = useState(false); // NEW Modal State
+    const [showCommentModal, setShowCommentModal] = useState(false); 
+    const [showMoveMenu, setShowMoveMenu] = useState(false);
+    const [currentCategory, setCurrentCategory] = useState(post.cookbookCategory || "none");
+    const [yummed, setYummed] = useState(post.kudos?.includes(currentUserId) || false);
+    const [count, setCount] = useState(post.kudosCount || 0);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [kudosList, setKudosList] = useState(post.kudosData || []);
+    
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
+    const scrollRef = useRef(null);
 
     // --- TOGGLE MODAL ---
     const toggleModal = () => {
         setShowCommentModal(!showCommentModal);
         document.body.style.overflow = !showCommentModal ? 'hidden' : 'unset';
     };
-
-    // ... (Keep handleShare, handleDelete exactly as they were) ...
 
     const handleShare = async () => {
       const shareData = {
@@ -41,13 +48,13 @@ export default function RecipePost({ post, myCookbooks }) {
     const handleDelete = async () => {
       if (window.confirm("Are you sure you want to delete this cook?")) {
         try {
-          const res = await fetch(`${API_URL}/api/posts/${post._id}`, { method: "DELETE" });
+          // Pass userId in query for a simple delete check on backend
+          const res = await fetch(`${API_URL}/api/posts/${post._id}?userId=${currentUserId}`, { method: "DELETE" });
           if (res.ok) window.location.reload();
         } catch (err) { console.error("Delete failed:", err); }
       }
     };
 
-    // --- EDITED COMMENT LOGIC ---
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (!commentText.trim()) return;
@@ -59,7 +66,7 @@ export default function RecipePost({ post, myCookbooks }) {
                 body: JSON.stringify({ 
                     text: commentText, 
                     username: currentUser?.username || "Guest",
-                    userAvatar: currentUser?.avatar || currentUser?.profilePic // Send avatar to DB
+                    userAvatar: currentUser?.avatar || currentUser?.profilePic 
                 }),
             });
 
@@ -73,15 +80,18 @@ export default function RecipePost({ post, myCookbooks }) {
         }
     };
 
-    // ... (Keep handleMoveCategory, getDomainName, Carousel logic, renderStars exactly as they were) ...
-    const [showMoveMenu, setShowMoveMenu] = useState(false);
-    const [currentCategory, setCurrentCategory] = useState(post.cookbookCategory || "none");
+    // --- UPDATED MOVE CATEGORY LOGIC ---
     const handleMoveCategory = async (newCategory) => {
+        if (!currentUserId) return alert("Please log in to organize recipes!");
+        
         try {
           const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ category: newCategory })
+            body: JSON.stringify({ 
+                category: newCategory,
+                userId: currentUserId // Pass the user ID so the backend knows who is moving it
+            })
           });
           if (res.ok) {
             const updated = await res.json();
@@ -96,8 +106,6 @@ export default function RecipePost({ post, myCookbooks }) {
         try { return new URL(url).hostname.replace('www.', ''); } catch { return "Recipe Source"; }
     };
 
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const scrollRef = useRef(null);
     const handleScroll = () => {
         if (scrollRef.current) {
             const width = scrollRef.current.offsetWidth;
@@ -105,6 +113,7 @@ export default function RecipePost({ post, myCookbooks }) {
             setCurrentIndex(newIndex);
         }
     };
+
     const scroll = (direction) => {
         if (scrollRef.current) {
             const width = scrollRef.current.offsetWidth;
@@ -112,38 +121,43 @@ export default function RecipePost({ post, myCookbooks }) {
             scrollRef.current.scrollTo({ left: scrollAmount, behavior: "smooth" });
         }
     };
+
     const renderStars = (rating) => {
         return [...Array(5)].map((_, i) => (
             <LuStar key={i} size={14} fill={i < rating ? "#f1c40f" : "none"} stroke={i < rating ? "#f1c40f" : "#ccc"} />
         ));
     };
 
-    const [yummed, setYummed] = useState(post.kudos?.includes(currentUserId) || false);
-    const [count, setCount] = useState(post.kudosCount || 0);
     const handleYum = async () => {
-        if (!currentUserId) return alert("Please log in!");
-        try {
-            const response = await fetch(`${API_URL}/api/posts/${post._id}/yum`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId: currentUserId }),
-            });
-            if (response.ok) {
-                const updatedPost = await response.json();
-                setCount(updatedPost.kudosCount);
-                setYummed(updatedPost.kudos?.includes(currentUserId));
-            }
-        } catch (err) { console.error("Error yumming:", err); }
-    };
+    if (!currentUserId) return alert("Please log in!");
+    try {
+        const response = await fetch(`${API_URL}/api/posts/${post._id}/yum`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: currentUserId }),
+        });
+        if (response.ok) {
+            const updatedPost = await response.json();
+            setCount(updatedPost.kudosCount);
+            setYummed(updatedPost.kudos?.includes(currentUserId));
+            
+            // KEY FIX: Update the list of users who yummed
+            // Ensure your backend .populates('kudos') before returning
+            setKudosList(updatedPost.kudosData || []); 
+        }
+    } catch (err) { console.error("Error yumming:", err); }
+};
 
     if (!post) return null;
 
     return (
         <div className="recipe-card">
+          {currentUserId === post.user && (
             <button className="delete-post-btn" onClick={handleDelete}><LuTrash2 size={18} /></button>
-            
+          )}
             <div className="card-header">
-                <Link to={`/profile/${post.user}`}><img src={post.userAvatar} alt={post.username} className="avatar" /></Link>
+                <Link to={`/profile/${post.user}`}><img src={post.userAvatar || TEST_AVATAR} alt={post.username} className="avatar"
+                /></Link>
                 <div className="user-meta">
                     <Link to={`/profile/${post.user}`} className="username" style={{ textDecoration: "none", color: "inherit" }}>{post.username}</Link>
                     <span className="timestamp">
@@ -163,7 +177,7 @@ export default function RecipePost({ post, myCookbooks }) {
                         <span className="source-divider"> | </span>
                         <span className="source-site">{getDomainName(post.sourceUrl)}</span>
                         <span className="source-divider"> | </span>
-                        <span className="source-recipe-name">{post.originalRecipeName || post.recipeName}</span>
+                        <span className="source-recipe-name">{post.recipeTitle || post.recipeName}</span>
                     </div>
                 )}
             </div>
@@ -196,7 +210,6 @@ export default function RecipePost({ post, myCookbooks }) {
                         <FaBowlFood className="yum-icon" />
                         <span className="yum-count">{count}</span>
                     </button>
-                    {/* UPDATED: Comment Button opens Modal */}
                     <button className="action-btn" onClick={toggleModal}>
                         <LuMessageCircle /> <span>{comments.length}</span>
                     </button>
@@ -204,7 +217,6 @@ export default function RecipePost({ post, myCookbooks }) {
                 </div>
             </div>
 
-            {/* --- EDITED FEED CARD COMMENT DISPLAY (Shows latest comment with avatar) --- */}
             <div className="comment-preview-area">
                 {comments?.length > 0 && (
                     <div className="comment-line-with-avatar" onClick={toggleModal}>
@@ -219,15 +231,47 @@ export default function RecipePost({ post, myCookbooks }) {
                     </button>
                 )}
             </div>
-
-            {/* --- NEW: FROSTED COMMENT MODAL --- */}
+{/* COMMENT & YUM MODAL */}
             {showCommentModal && (
                 <div className="modal-overlay frosted" onClick={toggleModal}>
                     <div className="comment-modal-card" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>Comments</h3>
+                            <div className="header-titles">
+                                <h3>Comments</h3>
+                                <div className="yum-summary">
+                                    <FaBowlFood className="yum-icon-small" />
+                                    <strong>{count} {count === 1 ? "Yum" : "Yums"}</strong>
+                                </div>
+                            </div>
                             <button className="close-modal-x" onClick={toggleModal}>✕</button>
                         </div>
+
+                        {/* Yummed By Avatar Stack */}
+                        {count > 0 && (
+    <div className="yum-avatar-row">
+        <div className="avatar-stack">
+            {kudosList.slice(0, 5).map((yummer, i) => {
+                // Determine if we have a full object or just an ID
+                const isObject = typeof yummer === 'object' && yummer !== null;
+                const yummerId = isObject ? yummer._id : yummer;
+                const yummerName = isObject ? yummer.username : "Chef";
+                const yummerImg = isObject ? (yummer.avatar || yummer.profilePic) : `https://ui-avatars.com/api/?name=Chef&background=random`;
+
+                return (
+                    <Link key={i} to={`/profile/${yummerId}`}>
+                        <img 
+                            src={yummerImg} 
+                            className="stacked-yum-avatar" 
+                            alt={yummerName}
+                            title={yummerName}
+                        />
+                    </Link>
+                );
+            })}
+        </div>
+        {count > 5 && <span className="yum-more-count">+{count - 5} more {count - 5 === 1 ? "chef" : "chefs"}</span>}
+    </div>
+)}
 
                         <div className="modal-comments-list">
                             {comments.map((c, i) => (
@@ -254,18 +298,22 @@ export default function RecipePost({ post, myCookbooks }) {
                 </div>
             )}
 
-            {/* ... (Keep Move Menu Logic exactly as it was) ... */}
             <div className="move-wrapper">
                 <button className="move-trigger-btn" onClick={() => setShowMoveMenu(!showMoveMenu)}>🔖</button>
                 {showMoveMenu && (
                     <div className="move-dropdown-menu">
                         <header>Organize to...</header>
                         <button onClick={() => handleMoveCategory("none")}>🌍 General Feed</button>
-                        {myCookbooks?.map(book => (
-                            <button key={book.id} className={currentCategory === book.category ? "active-cat" : ""} onClick={() => handleMoveCategory(book.category)}>
-                                {book.icon} {book.title}
-                            </button>
-                        ))}
+                        {/* Ensure myCookbooks is mapped safely */}
+                        {myCookbooks && myCookbooks.length > 0 ? (
+                            myCookbooks.map(book => (
+                                <button key={book._id} className={currentCategory === book.category ? "active-cat" : ""} onClick={() => handleMoveCategory(book.category)}>
+                                    {book.icon} {book.title}
+                                </button>
+                            ))
+                        ) : (
+                            <p className="no-cookbooks-hint">Create a cookbook first!</p>
+                        )}
                     </div>
                 )}
             </div>
