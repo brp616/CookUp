@@ -244,51 +244,57 @@ export default function RecipePost({ post, myCookbooks }) {
                     </button>
                 )}
             </div>
-{/* COMMENT & YUM MODAL */}
-            {showCommentModal && (
-                <div className="modal-overlay frosted" onClick={toggleModal}>
-                    <div className="comment-modal-card" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <div className="header-titles">
-                                <h3>Comments</h3>
-                                <div className="yum-summary">
-                                    <FaBowlFood className="yum-icon-small" />
-                                    <strong>{count} {count === 1 ? "Yum" : "Yums"}</strong>
-                                </div>
-                            </div>
-                            <button className="close-modal-x" onClick={toggleModal}>✕</button>
-                        </div>
-
-                        {/* Yummed By Avatar Stack */}
-                        {count > 0 && (
-    <div className="yum-avatar-row">
-        <div className="avatar-stack">
-           {kudosList.slice(0, 5).map((yummer, i) => {
-    const isPopulated = typeof yummer === 'object' && yummer !== null;
-    
-    const yummerId = isPopulated ? yummer._id : yummer;
-    const yummerName = isPopulated ? yummer.username : "Chef";
-    
-    // UPDATED: Look for profilePic as defined in your User.js
-    const yummerImg = isPopulated ? yummer.profilePic : null;
-    
-    const finalAvatar = yummerImg || `https://ui-avatars.com/api/?name=${yummerName}&background=random`;
-
-    return (
-        <Link key={i} to={`/profile/${yummerId}`}>
-            <img 
-                src={finalAvatar} 
-                className="stacked-yum-avatar" 
-                alt={yummerName}
-                title={yummerName}
-            />
-        </Link>
-    );
-})}
+{showCommentModal && (
+  <div className="modal-overlay frosted" onClick={toggleModal}>
+    <div className="comment-modal-card" onClick={(e) => e.stopPropagation()}>
+      
+      {/* 1. HEADER */}
+      <div className="modal-header">
+        <div className="header-titles">
+          <h3>Comments</h3>
+          <div className="yum-summary">
+            <FaBowlFood className="yum-icon-small" />
+            <strong>{count} {count === 1 ? "Yum" : "Yums"}</strong>
+          </div>
         </div>
-        {count > 5 && <span className="yum-more-count">+{count - 5} more {count - 5 === 1 ? "chef" : "chefs"}</span>}
-    </div>
-)}
+        <button className="close-modal-x" onClick={toggleModal}>✕</button>
+      </div>
+
+      {/* 2. SOCIAL PROOF ROW (Avatars + Text Inline) */}
+      {count > 0 && (
+        <div className="yum-avatar-row">
+          <div className="avatar-stack">
+            {kudosList.slice(0, 3).map((yummer, i) => {
+              const isPopulated = typeof yummer === 'object' && yummer !== null;
+              const yummerId = isPopulated ? yummer._id : yummer;
+              const yummerName = isPopulated ? yummer.username : "Chef";
+              const yummerImg = isPopulated ? yummer.profilePic : null;
+              const finalAvatar = yummerImg || `https://ui-avatars.com/api/?name=${yummerName}&background=random`;
+
+              return (
+                <Link key={i} to={`/profile/${yummerId}`}>
+                  <img 
+                    src={finalAvatar} 
+                    className="stacked-yum-avatar" 
+                    alt={yummerName}
+                    title={yummerName}
+                  />
+                </Link>
+              );
+            })}
+          </div>
+
+          <p className="yum-text-line">
+            {count === 1 ? (
+              <span><strong>{kudosList[0]?.username || "A chef"}</strong> yummed this</span>
+            ) : (
+              <span>
+                <strong>{kudosList[0]?.username || "Chef"}</strong> and <strong>{count - 1} others</strong> yummed this
+              </span>
+            )}
+          </p>
+        </div>
+      )}
 
                         <div className="modal-comments-list">
                             {comments.map((c, i) => (
