@@ -3,6 +3,8 @@ import axios from "axios";
 import Post from "../models/Post.js";
 import User from "../models/user.js";
 
+const pythonUrl = process.env.PYTHON_SERVICE_URL || "http://127.0.0.1:8000";
+
 const router = express.Router();
 
 /**
@@ -30,7 +32,7 @@ router.get("/fresh", async (req, res) => {
     if (userId && userId !== "undefined") {
       try {
         const pythonResponse = await axios.get(
-          `http://127.0.0.1:8000/recommend/${userId}`,
+          `${pythonUrl}/recommend/${userId}`,
           { timeout: 3000 }
         );
         

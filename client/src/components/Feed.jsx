@@ -6,6 +6,7 @@ import "../styles/Feed.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
 
+
 export default function Feed({ type, myCookbooks, user }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
