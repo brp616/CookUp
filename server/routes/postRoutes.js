@@ -171,14 +171,17 @@ router.delete("/:id", async (req, res) => {
 
 router.patch("/:id/category", async (req, res) => {
   try {
-    const { category, userId } = req.body;
+    const { category, cookbookId, userId } = req.body;
     
-    // Find post and ensure the user owns it (optional security)
+    // Find post and ensure the user owns it
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
 
-    // Update the category
+    // Update both the category string AND the unique cookbook ID
     post.cookbookCategory = category;
+    if (cookbookId) {
+      post.cookbookId = cookbookId; // This is the unique database ID (_id)
+    }
     
     const updatedPost = await post.save();
     res.json(updatedPost);
