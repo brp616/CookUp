@@ -45,6 +45,12 @@ router.post("/", async (req, res) => {
       .replace(/[^\w\s-]/g, "") // Remove special characters
       .replace(/\s+/g, "-");    // Replace spaces with dashes
 
+    // Check if this specific user already has a book with this category
+    const existingBook = await Cookbook.findOne({ userId, category: categorySlug });
+    if (existingBook) {
+      return res.status(400).json({ message: "You already have a cookbook with this name." });
+    }
+
     const newBook = new Cookbook({
       userId,
       title,
@@ -60,7 +66,6 @@ router.post("/", async (req, res) => {
   } catch (err) {
     console.error("POST Cookbook Error:", err);
 
-    // Check if the 500 was caused by the 'unique' index on category (if not yet deleted)
     if (err.code === 11000) {
       return res.status(400).json({ 
         message: "A cookbook with a similar name already exists. Please try a unique title." 
@@ -86,8 +91,8 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ message: "Cookbook not found." });
     }
 
-    // Security: Only allow the owner to delete it
-    if (book.userId !== userId) {
+    // Security: Convert ObjectId to string for comparison
+    if (book.userId.toString() !== userId) {
       return res.status(403).json({ message: "You do not have permission to delete this book." });
     }
 

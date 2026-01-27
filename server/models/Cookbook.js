@@ -15,6 +15,7 @@ const cookbookSchema = new mongoose.Schema({
       default: "public",
     }
 });
+cookbookSchema.index({ userId: 1, category: 1 }, { unique: true });
 
 const Cookbook = mongoose.model('Cookbook', cookbookSchema);
 export default Cookbook;
