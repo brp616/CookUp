@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const cookbookSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.String, ref: 'User', required: true
+    type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true
   },
   title: { type: String, required: true },
   subtitle: { type: String },

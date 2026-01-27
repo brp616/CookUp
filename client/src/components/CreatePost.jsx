@@ -35,6 +35,7 @@ export default function CreatePost({
   const [isUploading, setIsUploading] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [cookbookCategory, setCookbookCategory] = useState("none");
+  const [cookbookId, setCookbookId] = useState(null);
   const [visibility, setVisibility] = useState("public");
   const [hasExtracted, setHasExtracted] = useState(false);
 
@@ -44,7 +45,6 @@ export default function CreatePost({
     Occasion: ["Weeknight", "Party", "Holiday", "Date Night"],
   };
 
-  // now we have 2 options based on whether we are creating or editing a post
   useEffect(() => {
     if (editingPost && isOpen) {
       setRecipeName(editingPost.recipeName || "");
@@ -56,6 +56,7 @@ export default function CreatePost({
       setImages(editingPost.dishImages || []);
       setSelectedTags(editingPost.tags || []);
       setCookbookCategory(editingPost.cookbookCategory || "none");
+      setCookbookId(editingPost.cookbookId || null);
       setVisibility(editingPost.visibility || "public");
       setScrapedTitle(editingPost.recipeTitle || "");
       setHasExtracted(true);
@@ -69,6 +70,7 @@ export default function CreatePost({
       setImages([]);
       setSelectedTags([]);
       setCookbookCategory("none");
+      setCookbookId(null);
       setVisibility("public");
       setHasExtracted(false);
     }
@@ -140,6 +142,20 @@ export default function CreatePost({
     }
   };
 
+  const handleCookbookChange = (e) => {
+    const categoryValue = e.target.value;
+    setCookbookCategory(categoryValue);
+    
+    if (categoryValue === "none") {
+      setCookbookId(null);
+    } else {
+      const selectedBook = myCookbooks.find(book => book.category === categoryValue);
+      if (selectedBook) {
+        setCookbookId(selectedBook._id);
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user?._id) return alert("Log in to post!");
@@ -147,6 +163,7 @@ export default function CreatePost({
 
     const payload = {
       user: user._id,
+      userId: user._id, // Ensure consistent naming for filters
       username: user.username,
       userAvatar: user.profilePic || `https://ui-avatars.com/api/?name=${user.username}`,
       recipeName,
@@ -160,6 +177,7 @@ export default function CreatePost({
       rating: Number(rating),
       tags: selectedTags,
       cookbookCategory,
+      cookbookId, // Added this to properly link to unique cookbooks
       visibility,
     };
 
@@ -288,7 +306,7 @@ export default function CreatePost({
             <label>Save to Cookbook</label>
             <select
               value={cookbookCategory}
-              onChange={(e) => setCookbookCategory(e.target.value)}
+              onChange={handleCookbookChange}
               className="category-select"
             >
               <option value="none">🌍 General Feed</option>

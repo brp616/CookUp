@@ -12,17 +12,18 @@ router.get("/", async (req, res) => {
     })
     .populate({
       path: "kudos",
-      model: "User", // Explicitly tell Mongoose which model to look for
+      model: "User",
       select: "username profilePic"
     })
     .sort({ createdAt: -1 });
 
     res.json(posts);
   } catch (err) {
-    console.error("FEED CRASH:", err); // Check your terminal for this!
+    console.error("FEED CRASH:", err);
     res.status(500).json({ message: err.message });
   }
 });
+
 // --- SEARCH: (with avatars) ---
 router.get("/search", async (req, res) => {
   const { q } = req.query;
@@ -51,7 +52,7 @@ router.get("/search", async (req, res) => {
   }
 });
 
-// --- PATCH: INCREMENT YUMS (Bulletproof Version) ---
+// --- PATCH: INCREMENT YUMS ---
 router.patch("/:id/yum", async (req, res) => {
   try {
     const { userId } = req.body;
@@ -60,30 +61,20 @@ router.patch("/:id/yum", async (req, res) => {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
 
-    // 1. SAFE INITIALIZATION: Create a local copy of the kudos array
-    // If it doesn't exist, we start with an empty array.
     let currentKudos = Array.isArray(post.kudos) ? [...post.kudos] : [];
-
     const userIdStr = userId.toString();
-    
-    // 2. CHECK INDEX: Use the local array
     const index = currentKudos.findIndex(id => id && id.toString() === userIdStr);
 
     if (index > -1) {
-      // Remove the user if they already yummed
       currentKudos.splice(index, 1);
     } else {
-      // Add the user if they haven't yummed
       currentKudos.push(userId);
     }
 
-    // 3. RE-ASSIGN AND SAVE: Put the modified array back into the post object
     post.kudos = currentKudos;
     post.kudosCount = currentKudos.length;
-    
     await post.save();
 
-    // 4. POPULATE: Fetch the fresh data to send to the frontend
     const updatedPost = await Post.findById(req.params.id)
       .populate({
         path: "kudos",
@@ -101,7 +92,7 @@ router.patch("/:id/yum", async (req, res) => {
   }
 });
 
-// --- TIMELINE: (with avatars) ---
+// --- TIMELINE ---
 router.get("/timeline/:userId", async (req, res) => {
   try {
     const currentUser = await User.findById(req.params.userId);
@@ -122,8 +113,7 @@ router.get("/timeline/:userId", async (req, res) => {
   }
 });
 
-// --- REMAINING ROUTES (Same as before but consistent) ---
-
+// --- UPDATE POST ---
 router.patch("/:id", async (req, res) => {
   try {
     const updatedPost = await Post.findByIdAndUpdate(
@@ -135,6 +125,7 @@ router.patch("/:id", async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// --- GET SINGLE POST ---
 router.get("/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id).populate("kudos", "username profilePic");
@@ -142,14 +133,20 @@ router.get("/:id", async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// --- POST: CREATE NEW RECIPE (UPDATED) ---
 router.post("/", async (req, res) => {
   try {
+    // Ensure that if the frontend sends cookbookId, we save it!
     const newPost = new Post(req.body);
     const savedPost = await newPost.save();
     res.status(201).json(savedPost);
-  } catch (err) { res.status(400).json({ message: err.message }); }
+  } catch (err) { 
+    console.error("CREATE POST ERROR:", err);
+    res.status(400).json({ message: err.message }); 
+  }
 });
 
+// --- POST COMMENTS ---
 router.post("/:id/comments", async (req, res) => {
   try {
     const { text, username, userAvatar } = req.body;
@@ -162,6 +159,7 @@ router.post("/:id/comments", async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// --- DELETE POST ---
 router.delete("/:id", async (req, res) => {
   try {
     await Post.findByIdAndDelete(req.params.id);
@@ -169,18 +167,18 @@ router.delete("/:id", async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// --- PATCH: MOVE TO COOKBOOK (UPDATED) ---
 router.patch("/:id/category", async (req, res) => {
   try {
-    const { category, cookbookId, userId } = req.body;
+    const { category, cookbookId } = req.body;
     
-    // Find post and ensure the user owns it
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: "Post not found" });
 
-    // Update both the category string AND the unique cookbook ID
+    // Explicitly update both so the filter in Cookbooks.jsx has two ways to find it
     post.cookbookCategory = category;
     if (cookbookId) {
-      post.cookbookId = cookbookId; // This is the unique database ID (_id)
+      post.cookbookId = cookbookId;
     }
     
     const updatedPost = await post.save();

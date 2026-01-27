@@ -80,14 +80,17 @@ export default function RecipePost({ post, myCookbooks }) {
         } catch (err) { console.error("Error:", err); }
     };
 
-    const handleMoveCategory = async (newCategory) => {
-    if (!currentUserId) return alert("Please log in!");
-    try {
-        const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ category: newCategory, userId: currentUserId })
-        });
+    const handleMoveCategory = async (targetBook) => {
+  try {
+    const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        category: targetBook.category, // e.g., "cooked"
+        cookbookId: targetBook._id,    // e.g., "65a2b..." (The unique ID)
+        userId: post._id
+      }),
+    });
 
         if (res.ok) {
             // Refresh the page to reflect the move

@@ -152,11 +152,20 @@ const Cookbooks = ({ allPosts, user }) => {
   };
 
   const getFilteredPosts = () => {
-    if (!activeCookbook) return [];
-    return (allPosts || []).filter(post =>
-      post.cookbookCategory === activeCookbook.category ||
-      post.tags?.includes(activeCookbook.category)
-    );
+    if (!activeCookbook || !user?._id) return [];
+    
+    return allPosts.filter(post => {
+      // 1. Ensure the recipe belongs to the current user
+      const isOwner = post.userId === user._id;
+
+      // 2. Check if the post matches this specific cookbook
+      // We check the unique ID OR the category slug for legacy compatibility
+      const matchesBook = 
+        post.cookbookId === activeCookbook._id || 
+        post.cookbookCategory === activeCookbook.category;
+
+      return isOwner && matchesBook;
+    });
   };
 
   if (activeCookbook) {
