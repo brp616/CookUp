@@ -150,24 +150,28 @@ const Cookbooks = ({ allPosts, user }) => {
       console.error("Failed to save cookbook:", err);
     }
   };
+const getFilteredPosts = () => {
+  // If variables are missing, return empty
+  if (!activeCookbook || !user?._id || !allPosts) return [];
 
-  const getFilteredPosts = () => {
-    if (!activeCookbook || !user?._id) return [];
+  return allPosts.filter((post) => {
+    // 1. Normalize IDs to strings (Crucial because user is 'Mixed' type)
+    const postOwnerId = (post.user?._id || post.user)?.toString();
+    const currentUserId = user._id.toString();
+
+    // 2. Security: Only show my recipes in my cookbooks
+    if (postOwnerId !== currentUserId) return false;
+
+    // 3. Match Logic
+    // Standard 1: Unique Database ID match
+    const matchesId = post.cookbookId?.toString() === activeCookbook._id.toString();
     
-    return allPosts.filter(post => {
-      // 1. Ensure the recipe belongs to the current user
-      const isOwner = post.userId === user._id;
+    // Standard 2: Slug match (activeCookbook.category is the slug, post.cookbookCategory is the string)
+    const matchesCategory = post.cookbookCategory === activeCookbook.category;
 
-      // 2. Check if the post matches this specific cookbook
-      // We check the unique ID OR the category slug for legacy compatibility
-      const matchesBook = 
-        post.cookbookId === activeCookbook._id || 
-        post.cookbookCategory === activeCookbook.category;
-
-      return isOwner && matchesBook;
-    });
-  };
-
+    return matchesId || matchesCategory;
+  });
+};
   if (activeCookbook) {
     const filteredPosts = getFilteredPosts();
     return (

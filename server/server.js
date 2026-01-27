@@ -94,6 +94,7 @@ app.get(/^(?!\/api).+/, (req, res) => {
 
 //let's blast off!
 const PORT = process.env.PORT || 10000;
+
 app.listen(PORT, () => {
   console.log(`🚀 Server listening on port ${PORT}`);
 });

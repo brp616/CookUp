@@ -80,26 +80,27 @@ export default function RecipePost({ post, myCookbooks }) {
         } catch (err) { console.error("Error:", err); }
     };
 
-    const handleMoveCategory = async (targetBook) => {
-  try {
-    const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ 
-        category: targetBook.category, // e.g., "cooked"
-        cookbookId: targetBook._id,    // e.g., "65a2b..." (The unique ID)
-        userId: post._id
-      }),
-    });
+    const handleMoveCategory = async (targetCategorySlug) => {
+        try {
+            // Find the cookbook object from our array to get its ID
+            const targetBook = myCookbooks.find(b => b.category === targetCategorySlug);
+            
+            const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    category: targetCategorySlug, 
+                    cookbookId: targetBook ? targetBook._id : null 
+                }),
+            });
 
-        if (res.ok) {
-            // Refresh the page to reflect the move
-            window.location.reload(); 
+            if (res.ok) {
+                window.location.reload(); 
+            }
+        } catch (err) { 
+            console.error("Failed to move post:", err); 
         }
-    } catch (err) { 
-        console.error("Failed to move post:", err); 
-    }
-};
+    };
 
     const getDomainName = (url) => {
         if (!url) return "Recipe Source"; 
@@ -149,7 +150,6 @@ export default function RecipePost({ post, myCookbooks }) {
 
     return (
         <div className="recipe-card">
-            {/* --- OWNER ACTIONS (RE-ADDED) --- */}
             {currentUserId === post.user && (
                 <div className="owner-actions">
                     <button className="edit-post-btn" onClick={() => SetShowEditModal(true)}>

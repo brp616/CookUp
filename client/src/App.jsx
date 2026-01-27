@@ -54,9 +54,6 @@ useEffect(() => {
   fetchCookbooks();
 }, [fetchCookbooks]);
 
-useEffect(() => {
-  fetchCookbooks();
-}, [fetchCookbooks]); // Now this is safe to depend on
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -87,18 +84,21 @@ useEffect(() => {
 
   // Fetch posts logic
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const postRes = await fetch(`${API_URL}/api/posts`);
-        const postData = await postRes.json();
-        setPosts(Array.isArray(postData) ? postData : postData.posts || []);
-      } catch (err) {
-        console.error("Fetch posts failed:", err);
-      }
-    };
-    fetchPosts();
-  }, []);
-
+  const fetchPosts = async () => {
+    try {
+      const postRes = await fetch(`${API_URL}/api/posts`);
+      const postData = await postRes.json();
+      // Ensure we are getting an array
+      const finalPosts = Array.isArray(postData) ? postData : postData.posts || [];
+      setPosts(finalPosts);
+    } catch (err) {
+      console.error("Fetch posts failed:", err);
+    }
+  };
+  
+  fetchPosts();
+  // Add userId as a dependency so it refreshes when login finishes
+}, [user?._id]);
   //actually build out the site
   return (
     <div className="app-container">

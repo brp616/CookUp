@@ -1,8 +1,53 @@
 import express from "express";
+import mongoose from "mongoose"; 
 import Post from "../models/Post.js";
 import User from "../models/user.js"; 
+import Cookbook from "../models/Cookbook.js";
 
 const router = express.Router();
+
+/* temporary router to add new field cookbookid to posts so they are unique on user+book and move
+router.get("/migrate-fix", async (req, res) => {
+  try {
+    const cookbooks = await Cookbook.find({});
+    let linkedCount = 0;
+    let initializedCount = 0;
+
+    // STEP 1: Link existing recipes to their Cookbooks
+    for (const book of cookbooks) {
+      if (!book.userId) continue; // Skip orphan books for this step
+
+      const result = await Post.updateMany(
+        { 
+          user: book.userId, 
+          cookbookCategory: book.category,
+          cookbookId: { $exists: false } 
+        },
+        { $set: { cookbookId: book._id } }
+      );
+      linkedCount += result.modifiedCount;
+    }
+
+    // STEP 2: Inject cookbookId: null into EVERY post that still doesn't have the field
+    // This makes the field "exist" in the DB so your frontend can update it easily later.
+    const initResult = await Post.updateMany(
+      { cookbookId: { $exists: false } }, 
+      { $set: { cookbookId: null } }
+    );
+    initializedCount = initResult.modifiedCount;
+
+    res.json({ 
+      success: true, 
+      postsLinkedToBooks: linkedCount,
+      postsInitializedWithField: initializedCount,
+      message: "All posts now contain a cookbookId field."
+    });
+  } catch (err) {
+    console.error("MIGRATION ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+*/
 
 // --- GET: ALL PUBLIC POSTS (with avatars) ---
 router.get("/", async (req, res) => {
@@ -172,19 +217,23 @@ router.patch("/:id/category", async (req, res) => {
   try {
     const { category, cookbookId } = req.body;
     
-    const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ message: "Post not found" });
+    // Log this to your terminal to see if the ID is actually arriving
+    console.log("Updating Post:", req.params.id, "to Book ID:", cookbookId);
 
-    // Explicitly update both so the filter in Cookbooks.jsx has two ways to find it
-    post.cookbookCategory = category;
-    if (cookbookId) {
-      post.cookbookId = cookbookId;
-    }
-    
-    const updatedPost = await post.save();
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.id,
+      { 
+        $set: { 
+          cookbookCategory: category, 
+          cookbookId: cookbookId // This must be the Mongo _id of the cookbook
+        } 
+      },
+      { new: true }
+    );
+
+    if (!updatedPost) return res.status(404).json({ message: "Post not found" });
     res.json(updatedPost);
   } catch (err) {
-    console.error("MOVE CATEGORY ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 });

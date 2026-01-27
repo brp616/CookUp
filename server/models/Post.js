@@ -3,7 +3,7 @@ import user from "../models/user.js";
 
 const postSchema = new mongoose.Schema(
   {
-    user: String,
+    user: { type: mongoose.Schema.Types.Mixed, ref: 'User' },
     username: String,
     userAvatar: String,
     recipeName: String,
