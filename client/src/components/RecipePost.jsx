@@ -177,7 +177,11 @@ export default function RecipePost({ post, myCookbooks }) {
             <div className="card-content">
                 <h2 className="recipe-title">{post.recipeName}</h2>
                 <p className="recipe-description">{post.description}</p>
-                {currentCategory !== "none" && <div className="category-indicator-badge">📂 Filed in: <strong>{currentCategory}</strong></div>}
+               {currentCategory !== "none" && myCookbooks?.some(book => book._id === post.cookbookId) && (
+    <div className="category-indicator-badge">
+        📂 Filed in: <strong>{currentCategory}</strong>
+    </div>
+)}
                 {post.sourceUrl && (
                     <div className="source-metadata">
                         <a href={post.sourceUrl} target="_blank" rel="noopener noreferrer" className="recipe-source-link">
