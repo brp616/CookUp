@@ -153,24 +153,23 @@ const Cookbooks = ({ allPosts, user }) => {
 const getFilteredPosts = () => {
   // If variables are missing, return empty
   if (!activeCookbook || !user?._id || !allPosts) return [];
+return allPosts.filter((post) => {
+  // 1. Match by Unique Database ID (The Gold Standard)
+  // This allows you to see both your recipes AND recipes you've saved from others
+  const matchesId = post.cookbookId?.toString() === activeCookbook._id.toString();
+  
+  // 2. Fallback: Match by Slug 
+  // (Optional: Keep this if you still have legacy posts that haven't been migrated)
+  const matchesCategory = post.cookbookCategory === activeCookbook.category;
 
-  return allPosts.filter((post) => {
-    // 1. Normalize IDs to strings (Crucial because user is 'Mixed' type)
-    const postOwnerId = (post.user?._id || post.user)?.toString();
-    const currentUserId = user._id.toString();
+  // 3. Ownership Check (Updated)
+  // We only check currentUserId if we want to ensure we don't accidentally 
+  // pull in someone ELSE'S cookbook category matches.
+  const currentUserId = user._id.toString();
+  const belongsToMe = post.cookbookId ? true : (post.user?._id || post.user)?.toString() === currentUserId;
 
-    // 2. Security: Only show my recipes in my cookbooks
-    if (postOwnerId !== currentUserId) return false;
-
-    // 3. Match Logic
-    // Standard 1: Unique Database ID match
-    const matchesId = post.cookbookId?.toString() === activeCookbook._id.toString();
-    
-    // Standard 2: Slug match (activeCookbook.category is the slug, post.cookbookCategory is the string)
-    const matchesCategory = post.cookbookCategory === activeCookbook.category;
-
-    return matchesId || matchesCategory;
-  });
+  return matchesId || (matchesCategory && belongsToMe);
+});
 };
   if (activeCookbook) {
     const filteredPosts = getFilteredPosts();
