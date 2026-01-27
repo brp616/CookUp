@@ -81,20 +81,22 @@ export default function RecipePost({ post, myCookbooks }) {
     };
 
     const handleMoveCategory = async (newCategory) => {
-        if (!currentUserId) return alert("Please log in to organize recipes!");
-        try {
-          const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
+    if (!currentUserId) return alert("Please log in!");
+    try {
+        const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ category: newCategory, userId: currentUserId })
-          });
-          if (res.ok) {
-            const updated = await res.json();
-            setCurrentCategory(updated.cookbookCategory);
-            setShowMoveMenu(false);
-          }
-        } catch (err) { console.error("Failed to move post:", err); }
-    };
+        });
+
+        if (res.ok) {
+            // Refresh the page to reflect the move
+            window.location.reload(); 
+        }
+    } catch (err) { 
+        console.error("Failed to move post:", err); 
+    }
+};
 
     const getDomainName = (url) => {
         if (!url) return "Recipe Source"; 

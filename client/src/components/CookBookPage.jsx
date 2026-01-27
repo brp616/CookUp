@@ -5,10 +5,10 @@ import "../styles/Cookbooks.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
 
-const Cookbooks = ({ allPosts, myCookbooks, user }) => {
+const Cookbooks = ({ allPosts, user }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [activeCookbook, setActiveCookbook] = useState(null);
-  const [customBooks, setCustomBooks] = useState([]); // State for DB-only books
+  const [customBooks, setCustomBooks] = useState([]);
 
   // state for new cookbook modal
   const [newBookData, setNewBookData] = useState({
@@ -19,38 +19,72 @@ const Cookbooks = ({ allPosts, myCookbooks, user }) => {
     visibility: "public"
   });
 
-  // get only custom cookbooks from the DB
+  // get cookbooks from DB, or seed them if empty
   useEffect(() => {
     if (!user?._id) return;
 
-    const fetchUserCookbooks = async () => {
+    const fetchOrSeedCookbooks = async () => {
       try {
         const response = await fetch(`${API_URL}/api/cookbooks?userId=${user._id}`);
         if (response.ok) {
           const dbData = await response.json();
-          if (dbData && Array.isArray(dbData)) {
+          
+          if (dbData && dbData.length > 0) {
             setCustomBooks(dbData);
+          } else {
+            // New user detection: Seed default books
+            await seedDefaultBooks();
           }
         }
       } catch (err) {
-        console.error("Failed to fetch cookbooks:", err);
+        console.error("Failed to handle cookbooks:", err);
       }
     };
 
-    fetchUserCookbooks();
+    const seedDefaultBooks = async () => {
+      const defaults = [
+        { 
+          title: "To Cook", 
+          subtitle: "Future Deliciousness", 
+          color: "#a2d2f3", 
+          icon: "⏳", 
+          category: "to-cook", 
+          userId: user._id,
+          visibility: "public"
+        },
+        { 
+          title: "Cooked", 
+          subtitle: "Tried and True", 
+          color: "#a2f3a2", 
+          icon: "🍳", 
+          category: "cooked", 
+          userId: user._id,
+          visibility: "public"
+        }
+      ];
+
+      const createdBooks = [];
+      for (const book of defaults) {
+        const res = await fetch(`${API_URL}/api/cookbooks`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(book)
+        });
+        if (res.ok) {
+          const saved = await res.json();
+          createdBooks.push(saved);
+        }
+      }
+      setCustomBooks(createdBooks);
+    };
+
+    fetchOrSeedCookbooks();
   }, [user?._id]);
 
-  // COMBINED LIST: Defaults from props + Custom from state
-  const displayedCookbooks = [...myCookbooks, ...customBooks];
+  const displayedCookbooks = customBooks;
 
   const handleDeleteCookbook = async (id) => {
     if (!user?._id) return;
-
-    // Prevent deleting default books (they don't have MongoDB IDs starting with 'default')
-    if (String(id).startsWith("default")) {
-      alert("Default cookbooks cannot be deleted.");
-      return;
-    }
 
     const confirmDelete = window.confirm(
       "Are you sure? This won't delete your recipes, just the cookbook folder."
@@ -104,7 +138,6 @@ const Cookbooks = ({ allPosts, myCookbooks, user }) => {
         setCustomBooks([...customBooks, savedBook]);
         setIsCreating(false);
 
-        // reset modal
         setNewBookData({
           title: "",
           subtitle: "",
@@ -150,13 +183,11 @@ const Cookbooks = ({ allPosts, myCookbooks, user }) => {
               ← Back to Shelves
             </button>
 
-            {!String(activeCookbook._id).startsWith("default") && (
-              <button
-                className="delete-book-btn"
-                onClick={() => handleDeleteCookbook(activeCookbook._id)}>
-                🗑️ Delete Cookbook
-              </button>
-            )}
+            <button
+              className="delete-book-btn"
+              onClick={() => handleDeleteCookbook(activeCookbook._id)}>
+              🗑️ Delete Cookbook
+            </button>
           </div>
 
           <header
@@ -250,20 +281,20 @@ const Cookbooks = ({ allPosts, myCookbooks, user }) => {
               <h2>Design Your Cookbook</h2>
               <div className="modal-body">
                 <label>Title</label>
-<input
-  type="text"
-  placeholder="e.g., Summer Grilling"
-  value={newBookData.title}
-  onChange={e => setNewBookData({ ...newBookData, title: e.target.value })}
-/>
+                <input
+                  type="text"
+                  placeholder="e.g., Summer Grilling"
+                  value={newBookData.title}
+                  onChange={e => setNewBookData({ ...newBookData, title: e.target.value })}
+                />
 
-<label className="description-label">Description</label>
-<textarea
-  placeholder="e.g., Authentic family recipes..."
-  value={newBookData.subtitle}
-  maxLength="80"
-  onChange={e => setNewBookData({ ...newBookData, subtitle: e.target.value })}
-/>
+                <label className="description-label">Description</label>
+                <textarea
+                  placeholder="e.g., Authentic family recipes..."
+                  value={newBookData.subtitle}
+                  maxLength="80"
+                  onChange={e => setNewBookData({ ...newBookData, subtitle: e.target.value })}
+                />
                 <div className="selection-grid">
                   <div className="picker-section">
                     <label>Color</label>

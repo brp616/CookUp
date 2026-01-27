@@ -1,5 +1,5 @@
 //Whole lotta imports
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/NavBar";
 import Feed from "./components/Feed.jsx";
@@ -27,26 +27,36 @@ function App() {
   const [modalinuse, setmodalinuse] = useState(false);
   const [posts, setPosts] = useState([]);
 
-  // DERIVED STATE: This calculates individual cookbooks based on user._id 
-  // without using a separate useEffect, satisfying the ESLint rule.
-  const myCookbooks = user ? [
-    {
-      _id: `default-1-${user._id}`,
-      title: "Cooked It",
-      subtitle: "Tried & True",
-      color: "#f3d2a2",
-      icon: "✅",
-      category: "cooked",
-    },
-    {
-      _id: `default-2-${user._id}`,
-      title: "To Cook",
-      subtitle: "Future Feasts",
-      color: "#a2d2f3",
-      icon: "⏳",
-      category: "to-cook",
-    },
-  ] : [];
+  const [myCookbooks, setMyCookbooks] = useState([]);
+
+// 1. Extract the ID outside the callback
+const userId = user?._id;
+
+const fetchCookbooks = useCallback(async () => {
+  // 2. Use the stable variable here
+  if (!userId) {
+    setMyCookbooks([]);
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/api/cookbooks?userId=${userId}`);
+    if (response.ok) {
+      const data = await response.json();
+      setMyCookbooks(data);
+    }
+  } catch (err) {
+    console.error("Error syncing cookbooks:", err);
+  }
+}, [userId]); // 3. Use the stable variable as the only dependency
+
+useEffect(() => {
+  fetchCookbooks();
+}, [fetchCookbooks]);
+
+useEffect(() => {
+  fetchCookbooks();
+}, [fetchCookbooks]); // Now this is safe to depend on
 
   const handleLogout = () => {
     localStorage.removeItem("user");

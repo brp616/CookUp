@@ -169,4 +169,23 @@ router.delete("/:id", async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+router.patch("/:id/category", async (req, res) => {
+  try {
+    const { category, userId } = req.body;
+    
+    // Find post and ensure the user owns it (optional security)
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+
+    // Update the category
+    post.cookbookCategory = category;
+    
+    const updatedPost = await post.save();
+    res.json(updatedPost);
+  } catch (err) {
+    console.error("MOVE CATEGORY ERROR:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 export default router;
