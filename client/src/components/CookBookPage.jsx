@@ -154,21 +154,17 @@ const getFilteredPosts = () => {
   // If variables are missing, return empty
   if (!activeCookbook || !user?._id || !allPosts) return [];
 return allPosts.filter((post) => {
-  // 1. Match by Unique Database ID (The Gold Standard)
-  // This allows you to see both your recipes AND recipes you've saved from others
-  const matchesId = post.cookbookId?.toString() === activeCookbook._id.toString();
-  
-  // 2. Fallback: Match by Slug 
-  // (Optional: Keep this if you still have legacy posts that haven't been migrated)
-  const matchesCategory = post.cookbookCategory === activeCookbook.category;
+  if (!post.cookbookId) return false;
 
-  // 3. Ownership Check (Updated)
-  // We only check currentUserId if we want to ensure we don't accidentally 
-  // pull in someone ELSE'S cookbook category matches.
-  const currentUserId = user._id.toString();
-  const belongsToMe = post.cookbookId ? true : (post.user?._id || post.user)?.toString() === currentUserId;
+  // 1. Strict ID Match: This ensures the post belongs to THIS specific book
+  const matchesBookId = post.cookbookId.toString() === activeCookbook._id.toString();
 
-  return matchesId || (matchesCategory && belongsToMe);
+  // 2. Ownership Check: This ensures you only see the book if YOU are the one 
+  // who put it there (even if someone else wrote the recipe).
+  // We check the cookbook's owner, not the post's owner.
+  const isMyBook = activeCookbook.userId?.toString() === user._id.toString();
+
+  return matchesBookId && isMyBook;
 });
 };
   if (activeCookbook) {
