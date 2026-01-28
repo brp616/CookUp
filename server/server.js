@@ -9,6 +9,9 @@ import { fileURLToPath } from "url";
 import "./models/user.js"; 
 import "./models/Post.js";
 import "./models/Cookbook.js"; 
+import Post from "./models/Post.js";
+import User from "./models/user.js";
+import Cookbook from "./models/Cookbook.js";
 
 // Route imports
 import authRoutes from "./routes/authRoutes.js";
@@ -24,6 +27,60 @@ dotenv.config();
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+
+//temporary migration function to update cookbookId format
+const runMigration = async () => {
+  try {
+    // 1. Find posts where cookbookId is a single string (not an array)
+    const postsToFix = await Post.find({ 
+      cookbookId: { $exists: true, $not: { $type: "array" } } 
+    });
+
+    if (postsToFix.length > 0) {
+      console.log(`[Migration] Found ${postsToFix.length} posts to convert to arrays...`);
+      
+      for (let post of postsToFix) {
+        const oldId = post.cookbookId;
+        await Post.updateOne(
+          { _id: post._id },
+          { $set: { cookbookId: [oldId] } }
+        );
+      }
+      console.log("[Migration] Successfully converted all IDs to arrays.");
+    } else {
+      console.log("[Migration] No legacy string IDs found. Database is clean.");
+    }
+  } catch (err) {
+    console.error("[Migration] Error during migration:", err);
+  }
+};
+
+//similar temporary route to make empty cookbooks for all existing users if they don't exist
+const generateMissingCookbooks = async () => {
+  try {
+    console.log("--- Checking for users without cookbooks ---");
+    const users = await User.find();
+
+    for (const user of users) {
+      // Check if this user already has ANY cookbook
+      const existingBooks = await Cookbook.find({ userId: user._id });
+
+      if (existingBooks.length === 0) {
+        console.log(`Creating default cookbooks for user: ${user.username || user.email}`);
+
+        const defaults = [
+          { title: "To Cook", userId: user._id, category: "to-cook", icon: "⏳", color: "#a2d2f3" },
+    { title: "Cooked", userId: user, category: "cooked", icon: "🍳", color: "#a2f3a2" }
+        ];
+
+        await Cookbook.insertMany(defaults);
+      }
+    }
+    console.log("--- Cookbook check complete ---");
+  } catch (err) {
+    console.error("Migration Error:", err);
+  }
+};
 
 /*
    Middleware */
@@ -91,6 +148,11 @@ app.use("/api", (req, res) => {
 app.get(/^(?!\/api).+/, (req, res) => {
   res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
 });
+
+//temporary migration and cookbook generation
+//await runMigration();
+//await Cookbook.deleteMany({ title: { $in: ["Favorites", "Want to Try", "Family Recipes"] } });
+//await generateMissingCookbooks(); 
 
 //let's blast off!
 const PORT = process.env.PORT || 10000;

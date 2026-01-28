@@ -29,6 +29,7 @@ export default function RecipePost({ post, myCookbooks }) {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
     const scrollRef = useRef(null);
 
+
     const toggleModal = () => {
         setShowCommentModal(!showCommentModal);
         document.body.style.overflow = !showCommentModal ? 'hidden' : 'unset';
@@ -50,14 +51,54 @@ export default function RecipePost({ post, myCookbooks }) {
       } catch (err) { console.error("Error sharing:", err); }
     };
 
-    const handleDelete = async () => {
-      if (window.confirm("Are you sure you want to delete this cook?")) {
-        try {
-          const res = await fetch(`${API_URL}/api/posts/${post._id}?userId=${currentUserId}`, { method: "DELETE" });
-          if (res.ok) window.location.reload();
-        } catch (err) { console.error("Delete failed:", err); }
+
+const handleDelete = async () => {
+  const isOwner = currentUserId === post.user;
+
+  // 1. Logic for Post Owners: Permanent Delete
+  if (isOwner) {
+    if (window.confirm("Are you sure you want to delete this cook? This will remove it for everyone.")) {
+      try {
+        const res = await fetch(`${API_URL}/api/posts/${post._id}?userId=${currentUserId}`, { 
+            method: "DELETE" 
+        });
+        if (res.ok) window.location.reload();
+      } catch (err) { 
+        console.error("Delete failed:", err); 
       }
-    };
+    }
+  } 
+  
+  // 2. Logic for Savers: Unsave/Remove from Cookbook
+  else {
+    if (window.confirm("Remove this recipe from your cookbook?")) {
+      try {
+        // Find which of your cookbooks this post is currently in
+        const myBookMatch = myCookbooks?.find(book => 
+          post.cookbookIds?.some(id => id.toString() === book._id.toString())
+        );
+
+        if (!myBookMatch) {
+          console.warn("Could not find a matching book to remove from.");
+          return;
+        }
+
+        const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            cookbookId: myBookMatch._id, 
+            action: "remove" 
+          }),
+        });
+
+        if (res.ok) window.location.reload();
+      } catch (err) {
+        console.error("Unsave failed:", err);
+      }
+    }
+  }
+};
 
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
@@ -80,27 +121,44 @@ export default function RecipePost({ post, myCookbooks }) {
         } catch (err) { console.error("Error:", err); }
     };
 
-    const handleMoveCategory = async (targetCategorySlug) => {
-        try {
-            // Find the cookbook object from our array to get its ID
-            const targetBook = myCookbooks.find(b => b.category === targetCategorySlug);
-            
-            const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    category: targetCategorySlug, 
-                    cookbookId: targetBook ? targetBook._id : null 
-                }),
-            });
+   const handleMoveCategory = async (targetBook) => {
+  try {
+    const isRemoving = targetBook === "none";
+    
+    // 1. Determine the correct ID to send to the backend
+    let idToSend;
+    let action;
 
-            if (res.ok) {
-                window.location.reload(); 
-            }
-        } catch (err) { 
-            console.error("Failed to move post:", err); 
-        }
-    };
+    if (isRemoving) {
+      // Find the ID of YOUR book that this post is currently in
+      const currentBookMatch = myCookbooks?.find(book => 
+        post.cookbookId?.some(id => id.toString() === book._id.toString())
+      );
+      idToSend = currentBookMatch?._id;
+      action = "remove";
+    } else {
+      idToSend = targetBook._id;
+      action = "add";
+    }
+
+    if (!idToSend) return; // Safety check
+
+    const res = await fetch(`${API_URL}/api/posts/${post._id}/category`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        cookbookId: idToSend, 
+        action: action 
+      }),
+    });
+
+    if (res.ok) {
+      window.location.reload(); 
+    }
+  } catch (err) {
+    console.error("Move failed:", err);
+  }
+};
 
     const getDomainName = (url) => {
         if (!url) return "Recipe Source"; 
@@ -147,8 +205,7 @@ export default function RecipePost({ post, myCookbooks }) {
     };
 
     if (!post) return null;
-
-    return (
+return (
         <div className="recipe-card">
             {currentUserId === post.user && (
                 <div className="owner-actions">
@@ -177,11 +234,27 @@ export default function RecipePost({ post, myCookbooks }) {
             <div className="card-content">
                 <h2 className="recipe-title">{post.recipeName}</h2>
                 <p className="recipe-description">{post.description}</p>
-               {currentCategory !== "none" && myCookbooks?.some(book => book._id === post.cookbookId) && (
-    <div className="category-indicator-badge">
-        📂 Filed in: <strong>{currentCategory}</strong>
-    </div>
-)}
+                
+                {/* --- UPDATED BADGE LOGIC --- */}
+                {(() => {
+                    // Check if post has any cookbook associations
+                    if (!post.cookbookId || !Array.isArray(post.cookbookId)) return null;
+
+                    // Find if any of the post's cookbook IDs belong to the current user
+                    const matchedBook = myCookbooks?.find(book => 
+    post.cookbookId?.some(id => id?.toString() === book._id?.toString())
+);
+
+                    if (matchedBook) {
+                        return (
+                            <div className="category-indicator-badge">
+                                <span>{matchedBook.icon || "📂"}</span> Filed in: <strong>{matchedBook.title}</strong>
+                            </div>
+                        );
+                    }
+                    return null;
+                })()}
+              
                 {post.sourceUrl && (
                     <div className="source-metadata">
                         <a href={post.sourceUrl} target="_blank" rel="noopener noreferrer" className="recipe-source-link">
@@ -319,15 +392,22 @@ export default function RecipePost({ post, myCookbooks }) {
                     <div className="move-dropdown-menu">
                         <header>Organize to...</header>
                         <button onClick={() => handleMoveCategory("none")}>🌍 General Feed</button>
-                        {myCookbooks && myCookbooks.length > 0 ? (
-                            myCookbooks.map(book => (
-                                <button key={book._id} className={currentCategory === book.category ? "active-cat" : ""} onClick={() => handleMoveCategory(book.category)}>
-                                    {book.icon} {book.title}
-                                </button>
-                            ))
-                        ) : (
-                            <p className="no-cookbooks-hint">Create a cookbook first!</p>
-                        )}
+
+{myCookbooks && myCookbooks.length > 0 ? (
+    myCookbooks.map(book => (
+        <button 
+            key={book._id} 
+            // Check if this specific book ID is in the post's cookbookId array
+            className={post.cookbookId?.includes(book._id) ? "active-cat" : ""} 
+            // PASS THE WHOLE BOOK OBJECT HERE
+            onClick={() => handleMoveCategory(book)} 
+        >
+            {book.icon} {book.title}
+        </button>
+    ))
+) : (
+    <p className="no-cookbooks-hint">Create a cookbook first!</p>
+)}
                     </div>
                 )}
             </div>

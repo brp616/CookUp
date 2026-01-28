@@ -151,21 +151,21 @@ const Cookbooks = ({ allPosts, user }) => {
     }
   };
 const getFilteredPosts = () => {
-  // If variables are missing, return empty
   if (!activeCookbook || !user?._id || !allPosts) return [];
-return allPosts.filter((post) => {
-  if (!post.cookbookId) return false;
 
-  // 1. Strict ID Match: This ensures the post belongs to THIS specific book
-  const matchesBookId = post.cookbookId.toString() === activeCookbook._id.toString();
+  return allPosts.filter((post) => {
+    // 1. Safety check: ensure cookbookId is an array
+    if (!post.cookbookId || !Array.isArray(post.cookbookId)) return false;
 
-  // 2. Ownership Check: This ensures you only see the book if YOU are the one 
-  // who put it there (even if someone else wrote the recipe).
-  // We check the cookbook's owner, not the post's owner.
-  const isMyBook = activeCookbook.userId?.toString() === user._id.toString();
+    // 2. The fix: add '?' after 'id' to handle null entries safely
+    const matchesBookId = post.cookbookId.some(
+      (id) => id?.toString() === activeCookbook._id.toString()
+    );
 
-  return matchesBookId && isMyBook;
-});
+    const isMyBook = activeCookbook.userId?.toString() === user._id.toString();
+
+    return matchesBookId && isMyBook;
+  });
 };
   if (activeCookbook) {
     const filteredPosts = getFilteredPosts();

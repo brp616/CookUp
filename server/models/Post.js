@@ -23,7 +23,10 @@ kudos: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Array of User
       type: String,
       default: "none",
     },
-    cookbookId: { type: mongoose.Schema.Types.ObjectId, ref: 'Cookbook' }, //adding for unique, user-specific cookbooks
+    cookbookId: [{ 
+  type: mongoose.Schema.Types.ObjectId, 
+  ref: 'Cookbook' 
+}], //allows for multiple cookbooks
     visibility: {
       type: String,
       enum: ["public", "followers"], // Only allow these two values

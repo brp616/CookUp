@@ -37,10 +37,6 @@ router.post("/register", async (req, res) => {
     });
 
     const savedUser = await newUser.save();
-await Cookbook.create([
-  { title: "Cooked It", subtitle: "Tried & True", color: "#f3d2a2", icon: "✅", category: "cooked", user: savedUser._id },
-  { title: "To Cook", subtitle: "Future Feasts", color: "#a2d2f3", icon: "⏳", category: "to-cook", user: savedUser._id }
-]);
     const { password: pw, ...userData } = savedUser._doc;
     res.status(201).json(userData);
   } catch (err) {
@@ -74,10 +70,7 @@ router.post("/google", async (req, res) => {
       });
 
       const savedUser = await newUser.save();
-      await Cookbook.create([
-  { title: "Cooked It", subtitle: "Tried & True", color: "#f3d2a2", icon: "✅", category: "cooked", user: savedUser._id, visibility: "public" },
-  { title: "To Cook", subtitle: "Future Feasts", color: "#a2d2f3", icon: "⏳", category: "to-cook", user: savedUser._id, visibility: "public" }
-]);
+      
       const { password: pw, ...userData } = savedUser._doc;
       res.status(201).json(userData);
     }

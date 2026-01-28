@@ -71,8 +71,12 @@ useEffect(() => {
 
           if (res.ok) {
             const freshUserData = await res.json();
-            localStorage.setItem("user", JSON.stringify(freshUserData));
-            setUser(freshUserData);
+            
+            // Safety check to prevent infinite re-renders
+            if (JSON.stringify(freshUserData) !== JSON.stringify(user)) {
+              localStorage.setItem("user", JSON.stringify(freshUserData));
+              setUser(freshUserData);
+            }
           }
         } catch (err) {
           console.error("User sync failed:", err);
@@ -80,7 +84,7 @@ useEffect(() => {
       }
     };
     syncUser();
-  }, []);
+  }, [user?._id]); // Run sync when ID changes
 
   // Fetch posts logic
   useEffect(() => {
@@ -97,8 +101,8 @@ useEffect(() => {
   };
   
   fetchPosts();
-  // Add userId as a dependency so it refreshes when login finishes
-}, [user?._id]);
+}, []); // Fetch posts once on mount
+
   //actually build out the site
   return (
     <div className="app-container">

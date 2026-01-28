@@ -5,6 +5,29 @@ import User from "../models/user.js";
 import Cookbook from "../models/Cookbook.js";
 
 const router = express.Router();
+/* temporary route to clear all cookbooks from posts
+router.get("/empty-all-cookbooks", async (req, res) => {
+  try {
+    const result = await Post.updateMany(
+      {}, // Match all posts
+      { 
+        $set: { 
+          cookbookId: null, 
+          cookbookCategory: "none" 
+        } 
+      }
+    );
+
+    res.json({
+      success: true,
+      message: "All cookbooks are now empty. Cookbooks themselves were not deleted.",
+      postsReset: result.modifiedCount
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+*/
 
 /* temporary router to add new field cookbookid to posts so they are unique on user+book and move
 router.get("/migrate-fix", async (req, res) => {
@@ -215,23 +238,23 @@ router.delete("/:id", async (req, res) => {
 // --- PATCH: MOVE TO COOKBOOK (UPDATED) ---
 router.patch("/:id/category", async (req, res) => {
   try {
-    const { category, cookbookId } = req.body;
-    
-    // Log this to your terminal to see if the ID is actually arriving
-    console.log("Updating Post:", req.params.id, "to Book ID:", cookbookId);
+    const { cookbookId, action } = req.body; // 'action' could be 'add' or 'remove'
+
+    let update;
+    if (action === "remove") {
+      // Remove specific ID from the array
+      update = { $pull: { cookbookId: cookbookId } };
+    } else {
+      // Add ID to the array, but only if it's not already there ($addToSet)
+      update = { $addToSet: { cookbookId: cookbookId } };
+    }
 
     const updatedPost = await Post.findByIdAndUpdate(
       req.params.id,
-      { 
-        $set: { 
-          cookbookCategory: category, 
-          cookbookId: cookbookId // This must be the Mongo _id of the cookbook
-        } 
-      },
+      update,
       { new: true }
     );
 
-    if (!updatedPost) return res.status(404).json({ message: "Post not found" });
     res.json(updatedPost);
   } catch (err) {
     res.status(500).json({ message: err.message });

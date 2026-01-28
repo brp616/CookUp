@@ -18,78 +18,94 @@ export default function Register({ setUser }) {
 
   // Helper to create initial cookbook collections for new users
   const seedDefaultCookbooks = async (userId) => {
-    const defaults = [
-      { 
-        title: "To Cook", 
-        subtitle: "Future Deliciousness", 
-        color: "#a2d2f3", 
-        icon: "⏳", 
-        category: "to-cook", 
-        userId: userId,
-        visibility: "public"
-      },
-      { 
-        title: "Cooked", 
-        subtitle: "Tried and True", 
-        color: "#a2f3a2", 
-        icon: "🍳", 
-        category: "cooked", 
-        userId: userId,
-        visibility: "public"
-      }
-    ];
+  console.log("Seeding cookbooks for userId:", userId);
 
-    try {
-      await Promise.all(defaults.map(book => 
-        fetch(`${API_URL}/api/cookbooks`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(book)
-        })
-      ));
-    } catch (err) {
-      console.error("Failed to seed initial cookbooks:", err);
-    }
-  };
+  const defaults = [
+    { title: "To Cook", userId: userId, category: "to-cook", icon: "⏳", color: "#a2d2f3" },
+    { title: "Cooked", userId: userId, category: "cooked", icon: "🍳", color: "#a2f3a2" }
+  ];
 
-  const HandleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (formData.password.length < 6) {
-      return setError("Password needs to be at least 6 characters.");
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      return setError("Passwords do not match!");
-    }
-
-    try {
-      const res = await fetch(`${API_URL}/api/auth/register`, { 
+  try {
+    for (const book of defaults) {
+      console.log(`Attempting to create cookbook: ${book.title}...`);
+      
+      const res = await fetch(`${API_URL}/api/cookbooks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            username: formData.username,
-            email: formData.email,
-            password: formData.password
-        }),
+        body: JSON.stringify(book)
       });
-      const data = await res.json();
+
+      const responseData = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Registration failed");
+        console.error(`FAILED to create ${book.title}:`, responseData);
+      } else {
+        console.log(`SUCCESS: Created ${book.title}`, responseData);
       }
-
-      // Create default books before navigating
-      await seedDefaultCookbooks(data._id);
-
-      localStorage.setItem("user", JSON.stringify(data));
-      if (setUser) setUser(data);
-      navigate("/"); 
-    } catch (err) {
-      setError(err.message);
     }
-  };
+  } catch (err) {
+    console.error("seedDefaultCookbooks Network/Catch Error:", err);
+  }
+};
+const HandleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  console.log("--- 1. Registration Started ---");
+
+  if (formData.password.length < 6) {
+    return setError("Password needs to be at least 6 characters.");
+  }
+
+  if (formData.password !== formData.confirmPassword) {
+    return setError("Passwords do not match!");
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/api/auth/register`, { 
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password
+      }),
+    });
+    
+    const data = await res.json();
+    console.log("--- 2. Server Response Received ---", data);
+
+    if (!res.ok) {
+      console.error("Registration Server Error:", data);
+      throw new Error(data.message || "Registration failed");
+    }
+
+    // Checking for ID in different common structures
+    const newUser = data.user || data; 
+    const extractedId = newUser._id || newUser.id;
+    
+    console.log("Extracted User Object:", newUser);
+    console.log("Extracted ID to be used for seeding:", extractedId);
+
+    if (!extractedId) {
+      console.warn("CRITICAL: No ID found in the response. Check backend return statement.");
+      throw new Error("Account created, but userId is missing from response.");
+    }
+
+    // Call seed with the ID
+    console.log("--- 3. Triggering Seed Process ---");
+    await seedDefaultCookbooks(extractedId);
+
+    localStorage.setItem("user", JSON.stringify(newUser));
+    if (setUser) setUser(newUser);
+    
+    console.log("--- 4. Navigation Success ---");
+    navigate("/"); 
+    
+  } catch (err) {
+    console.error("HandleSubmit Catch Block:", err.message);
+    setError(err.message);
+  }
+};
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
